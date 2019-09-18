@@ -4,6 +4,7 @@ import logging
 import os
 import numpy as np
 import pandas as pd
+import subprocess
 """
 Search for CRISPR-Cas systems using CRISPR arrays as an anchor.
 """
@@ -15,15 +16,16 @@ help='root output directory')
 parser.add_argument('--tmp_dir', type=str, dest='tmp_dir', action='store',
 default='/tmp',
 help='temporary file directory. If not specified, uses /tmp')
-parser.add_argument('--crispr_gff', type=str, dest='crispr_gff', action='store', nargs=?,
+parser.add_argument('--crispr_gff', type=str, dest='crispr_gff', action='store', nargs='?',
 help='CRISPRDetect GFF file. If supplied, CRISPRDetect will not be run.')
-parser.add_argument('--prodigal_amino', type=str, dest='prodigal_amino', action='store', nargs=?,
+parser.add_argument('--prodigal_amino', type=str, dest='prodigal_amino', action='store', nargs='?',
 help='Prodigal amino acid file. Optional. If supplied, Prodigal will not be run.')
 parser.add_argument('--window_extent', type=int, dest='window_extent', action='store', default=10000,
 help='Number of bp extension to include in a cluster. Default is 10kb.')
 parser.add_argument('--logfile_dir', type=str, dest='logfile_dir', action='store',
 help='Directory for log files')
-
+parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
+help='Directory for CRISPRDetect.pl')
 # parser.add_argument('--db_set', type=str, dest='db_set', action='store',
 # help='Comma-separated list of HMM databases to search, e.g. KO,PFAM,TIGRFAM. Choose from: {KO, PFAM, TIGRFAM}')
 #------------------------------------------------------------------------------
@@ -56,7 +58,7 @@ def gff_to_pddf(gff, ftype=''):
             return gff_df
 #------------------------------------------------------------------------------
 def fetch_gene_clusters(gff_df, prodigal_seq_dict, out_fasta, winsize):
-    with open(out_fasta, 'w') as fa):
+    with open(out_fasta, 'w') as fa:
         neighbor_genes = []
         #Loop through records and fetch neighboring genes
         for index, row in gff_df.iterrows():
@@ -80,15 +82,14 @@ def make_seqdict(fasta, prodigal=False):
         return(seq_dict)
 #==============================================================================
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
-
-for key, value in output_paths:
-    if not os.path.exists(value):
-        os.makedirs(value)
+#for key, value in output_paths:
+#    if not os.path.exists(value):
+#        os.makedirs(value)
 #==============================================================================
 #Prodigal options
-prodigal_out = os.path.join(output_paths['Prodigal'], os.path.basename(opts.scaffold) + '_prodigal.gff')
-prodigal_aa = os.path.join(output_paths['Prodigal'], os.path.basename(opts.scaffold) + '_prodigal.faa')
-prodigal_nt = os.path.join(output_paths['Prodigal'], os.path.basename(opts.scaffold) + '_prodigal.fna')
+prodigal_out = os.path.join(output_paths['Prodigal'], os.path.basename(opts.scaffold_file) + '_prodigal.gff')
+prodigal_aa = os.path.join(output_paths['Prodigal'], os.path.basename(opts.scaffold_file) + '_prodigal.faa')
+prodigal_nt = os.path.join(output_paths['Prodigal'], os.path.basename(opts.scaffold_file) + '_prodigal.fna')
 
 prodigal_opts = {'-i':opts.scaffold_file, '-p':'single', '-o':prodigal_out,
 '-a':prodigal_aa, '-d':prodigal_nt, '-f':'gff', '-q':''}
@@ -108,10 +109,9 @@ crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], os.path.basename(
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], os.path.basename(opts.scaffold_file) + '_CRISPRDetect.log')
 #CRISPRDetect options
 crispr_detect_opts = {'-f':opts.scaffold_file,
-'-o':crispr_detect_out
-'-T':2, '-minimum_repeat_length':23, '-array_quality_score_cutoff':3,
- '-tmp_dir':opts.tmp_dir,
- 'logfile':crispr_detect_log
+'-o':crispr_detect_out, '-T':2, '-minimum_repeat_length':23,
+'-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
+ '-logfile':crispr_detect_log
  }
 #==============================================================================
 #Read in the nucleotide scaffolds
@@ -121,8 +121,8 @@ crispr_detect_opts = {'-f':opts.scaffold_file,
 ###---CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
-    crispr_detect_optstring = crispr_detect_opts
-    crispr_detect_command = 'CRISPRDetect.pl %s' % crispr_detect_optstring
+    crispr_detect_optstring = optstring_join(crispr_detect_opts)
+    crispr_detect_command = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl %s' % crispr_detect_optstring)
     subprocess.run([crispr_detect_command])
     crispr_gff = crispr_detect_out + '.gff'
 else:
