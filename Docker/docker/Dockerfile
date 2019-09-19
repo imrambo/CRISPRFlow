@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y apt-utils \
     && apt-get clean
 
 RUN add-apt-repository -y ppa:deadsnakes/ppa \
-    && apt-install -y python3.7 python3-pip
+    && apt-get install -y python3.7 python3-pip
 
 RUN mkdir /build/
 
