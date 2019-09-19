@@ -51,8 +51,6 @@ RUN cd /build && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
     && rm CRISPRDetect_2.4.zip
 ENV PATH /build/CRISPRDetect_2.4:$PATH
 
-#VOLUME
-
 #Prodigal
 #RUN cd /build && git clone https://github.com/hyattpd/Prodigal.git \
 #    && cd Prodigal \
