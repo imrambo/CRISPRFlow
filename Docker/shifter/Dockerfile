@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 MAINTAINER Ian Rambo ian.rambo@utexas.edu
-
+#Dockerfile for use with Shifter
 
 RUN apt-get update && apt-get install -y apt-utils \
     default-jdk \
