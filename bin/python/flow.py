@@ -113,6 +113,15 @@ crispr_detect_opts = {'-f':opts.scaffold_file,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
  '-logfile':crispr_detect_log
  }
+crispr_detect_optstring = optstring_join(crispr_detect_opts)
+
+###---CRISPRCasFinder---###
+ ccfinder_opts = {'-log':'', '-copyCSS':'', '-repeats':'', '-DBcrispr':'',
+'-DIRrepeat':'', '-cas':'', '-ccvRep':'', '-vicinity':10000, '-cluster':20000,
+'-minDR':23, '-maxDR':72, '-minSP':8, '-maxSP':64, '-cpuM':1,
+'-definition':'SubTyping', '-getSummaryCasfinder':'', '-betterDetectTrunc':'',
+'-soFile':ccfinder_sofile, '-keep':''}
+ccfinder_optstring = optstring_join(ccfinder_opts)
 #==============================================================================
 #Read in the nucleotide scaffolds
 # scaffold_handle = open(opts.scaffold_file, 'r')
@@ -121,7 +130,6 @@ crispr_detect_opts = {'-f':opts.scaffold_file,
 ###---CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
-    crispr_detect_optstring = optstring_join(crispr_detect_opts)
     crispr_detect_command = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl %s' % crispr_detect_optstring)
     subprocess.run([crispr_detect_command])
     crispr_gff = crispr_detect_out + '.gff'
