@@ -54,3 +54,6 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
     && python2.7 setup.py build \
     && python2.7 setup.py test -vv \
     && python2.7 setup.py install
+
+
+RUN cd /build && git clone -b test --single-branch https://github.com/imrambo/CRISPRFlow.git

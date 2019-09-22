@@ -109,7 +109,7 @@ def prodigal_mode_select(fasta, version=2):
 def get_basename(file_path):
     basename = os.path.basename(opts.fasta_file)
     #Remove two extensions, e.g. foo.tar.gz becomes foo
-    if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename)
+    if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
         basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
     else:
         basename = os.path.splitext(basename)[0]
