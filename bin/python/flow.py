@@ -161,11 +161,13 @@ help='Prodigal amino acid file. Optional. If supplied, Prodigal will not be run.
 parser.add_argument('--window_extent', type=int, dest='window_extent', action='store', default=10000,
 help='Number of bp extension to include in a cluster. Default is 10kb.')
 parser.add_argument('--logfile_dir', type=str, dest='logfile_dir', action='store',
-help='Directory for log files')
+nargs = '?', help='Directory for log files.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
-help='Directory for CRISPRDetect.pl')
+help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4')
 parser.add_argument('--db_set', type=str, dest='db_set', action='store', nargs='?',
-help='Comma-separated list of HMM databases to use for auxiliary genes. To run all profiles of a database, choose from: {KO, PFAM, TIGRFAM}. You can also specify certain profiles, e.g. K00001')
+help='Comma-separated list of HMM databases to use for auxiliary genes. To run all profiles of a database, choose from: [KO, PFAM, TIGRFAM]. You can also specify certain profiles, e.g. K00001')
+parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
+help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -222,10 +224,11 @@ fetch_gene_clusters(gff_df=crispr_gff_df, prodigal_seq_dict=prodigal_faa_dict, o
 #Subtype the groups of CRISPR-neighboring genes
 macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
 '--e-value-search':1e-6, '--i-evalue-select':1e-4, '--coverage_profile':0.5,
-'--def':'../DEF', '--out-dir':output_paths['MacSyFinder'],
+'--def':'../data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-'--profile-suffix':'search_hmm.out', '--profile-dir':'../profiles/CAS',
+'--profile-suffix':'hmm', '--profile-dir':'../data/profiles/CAS',
 '--worker':opts.threads, '--verbosity':'-vv'}
+
 if opts.logfile_dir:
     macsyfinder_opts['--log'] = opts.logfile_dir
 else:
