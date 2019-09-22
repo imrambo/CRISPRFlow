@@ -1,12 +1,20 @@
 FROM ubuntu:18.04
 MAINTAINER Ian Rambo ian.rambo@utexas.edu
-#Dockerfile for use with Shifter
+#Dockerfile for use with Shifter on DOE NERSC systems
+
+USER root
+
+RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
+
+USER docker
 
 RUN apt-get update && apt-get install -y apt-utils \
     default-jdk \
     zlib1g-dev \
     default-jre \
     software-properties-common \
+    python3.7 \
+    python3-pip \
     python2.7 \
     python-pip \
     git \
@@ -25,10 +33,11 @@ RUN apt-get update && apt-get install -y apt-utils \
     gcc \
     make \
     g++ \
+    unzip \
+    sudo \
     && apt-get clean
 
-RUN add-apt-repository -y ppa:deadsnakes/ppa \
-    && apt-install -y python3.7 python3-pip
+RUN add-apt-repository -y ppa:deadsnakes/ppa
 
 RUN mkdir /build/
 
@@ -36,22 +45,29 @@ RUN pip3 install biopython \
     && pip3 install pandas \
     && pip3 install scons
 
-#MacSyFinder
-RUN cd /build && git clone https://github.com/gem-pasteur/macsyfinder.git \
-    && cd macsyfinder \
-    && python setup.py build \
-    && python setup.py test -vv \
-    && python setup.py install
-ENV PATH /build/macsyfinder/bin:$PATH
-
 #CRISPRDetect_2.4
 RUN cd /build && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
     && cd CRISPRDetect_2.4 \
     && unzip CRISPRDetect_2.4.zip \
-    && rm CRISPRDetect_2.4.zip
-ENV PATH /build/CRISPRDetect_2.4:$PATH
+    && rm CRISPRDetect_2.4.zip \
+    && cpan Parallel::ForkManager
+ENV PATH="/build/CRISPRDetect_2.4/CRISPRDetect_2.4:${PATH}"
 
-#VOLUME
+#CRISPRCasFinder
+RUN cd /build && git clone https://github.com/dcouvin/CRISPRCasFinder.git \
+    && cd CRISPRCasFinder \
+    && sudo bash installer_UBUNTU.sh \
+    && ./CRISPRCasFinder.pl -cf CasFinder-2.0.2 -def General -cas -i install_test/sequence.fasta -out Results_test_install –keep \
+    && diff Results_test_install/TSV/Cas_REPORT.tsv install_test/Cas_REPORT.tsv \
+    && diff Results_test_install/TSV/Crisprs_REPORT.tsv install_test/Crisprs_REPORT.tsv
+
+
+#------------------------------------------------------------------------------
+#Install dependencies manually from source
+#RUN cd /build && wget https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tgz \
+#    && tar xvzf Python-2.7.13.tgz && cd /build/Python-2.7.13 \
+#    && ./configure && make -j4 && make install && make clean \
+#    && rm /build/Python-2.7.13.tgz
 
 #Prodigal
 #RUN cd /build && git clone https://github.com/hyattpd/Prodigal.git \
