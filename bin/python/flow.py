@@ -14,7 +14,8 @@ import subprocess
 import magic
 import gzip
 import re
-
+import datetime
+import hmmer
 # FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 # logging.basicConfig(format=FORMAT)
 # logging.get_logger()
@@ -114,16 +115,16 @@ def get_basename(file_path):
     else:
         basename = os.path.splitext(basename)[0]
 #------------------------------------------------------------------------------
-def prodigal_command_generate(fasta, outdir, prefix, outfmt='gff', version=2):
+def prodigal_command_generate(ntfasta, outdir, prefix, outfmt='gff', version=2):
     """
     Generate a command string to run Prodigal on a fasta file.
     """
     #HOW CAN I EXTRACT THE OUTPUT OF prodigal -v ???
-    prodigal_mode = prodigal_mode_select(fasta, version=version)
+    prodigal_mode = prodigal_mode_select(ntfasta, version=version)
 
-    prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.gff')
-    prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
-    prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
+    prodigal_out = os.path.join(outdir, prefix + '_prodigal.gff')
+    prodigal_aa = os.path.join(outdir, prefix + '_prodigal.faa')
+    prodigal_nt = os.path.join(outdir, prefix + '_prodigal.fna')
 
     prodigal_opts = {'-p':prodigal_mode[0], '-o':prodigal_out,
     '-a':prodigal_aa, '-d':prodigal_nt, '-f':outfmt}
@@ -133,15 +134,20 @@ def prodigal_command_generate(fasta, outdir, prefix, outfmt='gff', version=2):
         if '-i' in prodigal_opts:
             del prodigal_opts['-i']
         prodigal_optstring = optstring_join(prodigal_opts)
-        prodigal_command = 'zcat %s | prodigal %s' % (fasta, prodigal_optstring)
+        prodigal_command = 'zcat %s | prodigal %s' % (ntfasta, prodigal_optstring)
 
     else:
         if not prodigal_opts['-i']:
-            prodigal_opts['-i'] = fasta
+            prodigal_opts['-i'] = ntfasta
         prodigal_optstring = optstring_join(prodigal_opts)
-        prodigal_command = 'prodigal %s' % (fasta, prodigal_optstring)
+        prodigal_command = 'prodigal %s' % (ntfasta, prodigal_optstring)
 
     return prodigal_command,prodigal_opts
+
+#==============================================================================
+build_root = '../..'
+db_ids = ['CAS', 'KO', 'PFAM', 'TIGR']
+regex = r'%s\d+' % '|'.join(db_ids)
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -153,19 +159,21 @@ parser.add_argument('--tmp_dir', type=str, dest='tmp_dir', action='store',
 default='/tmp',
 help='temporary file directory.')
 parser.add_argument('--threads', type=int, dest='threads', action='store', default=1,
-help='number of threads for CRISPRDetect and MacSyFinder')
+help='number of threads for each command')
+parser.add_argument('--jobs', type=int, dest='jobs', action='store', default=1,
+help='number of jobs for each step')
 parser.add_argument('--crispr_gff', type=str, dest='crispr_gff', action='store', nargs='?',
 help='CRISPRDetect GFF file. If supplied, CRISPRDetect will not be run.')
 parser.add_argument('--prodigal_amino', type=str, dest='prodigal_amino', action='store', nargs='?',
 help='Prodigal amino acid file. Optional. If supplied, Prodigal will not be run.')
 parser.add_argument('--window_extent', type=int, dest='window_extent', action='store', default=10000,
-help='Number of bp extension to include in a cluster. Default is 10kb.')
-parser.add_argument('--logfile_dir', type=str, dest='logfile_dir', action='store',
+help='Number of bp extension to include in a cluster. Default = 10kb.')
+parser.add_argument('--joblog_dir', type=str, dest='joblog_dir', action='store',
 nargs = '?', help='Directory for log files.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
 help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4')
-parser.add_argument('--db_set', type=str, dest='db_set', action='store', nargs='?',
-help='Comma-separated list of HMM databases to use for auxiliary genes. To run all profiles of a database, choose from: [KO, PFAM, TIGRFAM]. You can also specify certain profiles, e.g. K00001')
+parser.add_argument('--db_set', type=str, dest='db_set', action='store',
+nargs='?', type=str, help='Comma-separated list of HMM database paths to use for CRISPR-proximity gene hmmsearch. You can also specify paths to certain profiles, e.g. /path/to/K00001.hmm')
 parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
 help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
 
@@ -229,8 +237,8 @@ macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_repl
 '--profile-suffix':'hmm', '--profile-dir':'../data/profiles/CAS',
 '--worker':opts.threads, '--verbosity':'-vv'}
 
-if opts.logfile_dir:
-    macsyfinder_opts['--log'] = opts.logfile_dir
+if opts.joblog_dir:
+    macsyfinder_opts['--log'] = opts.joblog_dir
 else:
     macsyfinder_opts['--log'] = output_paths['MacSyFinder']
 
@@ -238,15 +246,33 @@ macsyfinder_optstring = optstring_join(macsyfinder_opts)
 macsyfinder_command = 'macsyfinder %s' % macsyfinder_optstring
 subprocess.run([macsyfinder_command])
 #==============================================================================
+hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42}
+
+hmmsearch_joblog = os.path.join(output_paths['HMMER'], 'hmmsearch_joblog_' + now.strftime('%D-%M-%Y_%H:%M'))
+
+if ',' in opts.db_set:
+    db_list = ','.split(opts.db_set)
+    pfiles = []
+    for db in db_list:
+        if os.path.isdir(db):
+            if opts.jobs > 1:
+                hmmsearch_command_generate(seqdb=neighbor_aa_fasta, profile=db,
+                optdict=hmmsearch_opts, jobs=opts.jobs, joblog=hmmsearch_joblog,
+                outdir=output_paths['HMMER'], psuffix='.hmm', optdict=hmmsearch_opts,
+                parallel=True, jobs=opts.jobs, joblog=hmmsearch_joblog)
+
+        elif os.path.isfile(db):
+            pfiles.append(db)
+
+hmmer.hmmsearch_command_generate(seqdb=neighbor_aa_fasta, profile=, optdict=hmmsearch_opts)
+
+seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*
+#==============================================================================
+transposase_dict = dict()
 #Read in the nucleotide scaffolds
 # scaffold_handle = open(opts.scaffold_file, 'r')
 # scaffold_obj = SeqIO.to_dict(SeqIO.parse(scaffold_handle), 'fasta')
 
-# ###---HMMER suite---###
-# #Hmmsearch options
-# hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42}
-# hmmsearch_parallel_opts = {'-jobs':5}
-# hmmsearch_optstring = optstring_join(hmmsearch_opts)
 # #Jackhmmer options
 # jackhmmer_opts = {'--mx':'BLOSUM62', '-E':1e-20, '--domE':1e-20, '-N':20,
 # '--incE':1e-20, '--incdomE':1e-20, '--F1':0.01, '--seed':42, '--cpu':4,
@@ -268,23 +294,8 @@ subprocess.run([macsyfinder_command])
 # subprocess.run([hmmsearch_hits_command])
 #
 # dbh_df = domtbl_besthits(hmmer_best_hits)
-#=============================================================================
-
-#Create unified table - CRISPR and genes
-
-# def shorten_header_crisprDetect():
-#     "if header length+maxsize of crispr > 256"
-#Convert to GFF3 format and combine with CRISPR gff df
-#==========================================================================
-#Parse HMMsearch results
-
-#Nucleotide analyses
-
-#Parse scaffolds - include non-coding regions
-
-
-#create new features in GFF
-#==========================================================================
+#==============================================================================
+#==============================================================================
 # ###---CRISPRCasFinder---###
 #  ccfinder_opts = {'-log':'', '-copyCSS':'', '-repeats':'', '-DBcrispr':'',
 # '-DIRrepeat':'', '-cas':'', '-ccvRep':'', '-vicinity':10000, '-cluster':20000,

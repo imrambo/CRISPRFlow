@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y apt-utils \
     g++ \
     unzip \
     sudo \
+    parallel \
     && apt-get clean
 
 RUN add-apt-repository -y ppa:deadsnakes/ppa
