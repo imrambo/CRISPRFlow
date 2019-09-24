@@ -38,7 +38,7 @@ RUN add-apt-repository -y ppa:deadsnakes/ppa
 
 RUN pip3 install biopython pandas scons python-magic
 #------------------------------------------------------------------------------
-RUN mkdir /build/
+RUN mkdir -p /build/database
 
 #CRISPRDetect_2.4
 RUN cd /build && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
@@ -59,3 +59,13 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
 
 
 RUN cd /build && git clone -b play_notebook --single-branch https://github.com/imrambo/CRISPRFlow.git
+
+RUN mkdir /build/database/TIGRFAM && cd /build/database/TIGRFAM \
+    && wget ftp://ftp.jcvi.org/pub/data/TIGRFAMs/TIGRFAMs_15.0_HMM.tar.gz \
+    && tar -zxf TIGRFAMs_15.0_HMM.tar.gz \
+    && rm TIGRFAMs_15.0_HMM.tar.gz
+
+RUN mkdir /build/database/ANTIFAM && cd /build/database/ANTIFAM \
+    && wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/AntiFam/current/Antifam.tar.gz \
+    && tar -zxf Antifam.tar.gz \
+    && rm Antifam.tar.gz
