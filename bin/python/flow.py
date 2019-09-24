@@ -200,7 +200,7 @@ help='suffix for HMM gene profiles. Default is ".hmm"')
 
 opts = parser.parse_args()
 
-if opts.jobs[0] < 1:
+if opts.jobs < 1:
     logging.warning('--jobs must be >= 1')
 #==============================================================================
 #Create the output directories
