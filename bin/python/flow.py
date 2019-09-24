@@ -61,6 +61,7 @@ def get_basename(file_path):
         basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
     else:
         basename = os.path.splitext(basename)[0]
+    return basename
 #------------------------------------------------------------------------------
 def is_gzipped(file_path):
     """
