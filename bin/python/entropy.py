@@ -1,3 +1,4 @@
+#N Tropy
 def relative_entropy(df, groupvar, countvar1, countvar2):
     #Number of z
     ngenome = df[countvar1].unique().size

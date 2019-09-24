@@ -26,20 +26,7 @@ from functools import reduce
 # In[686]:
 
 
-def relative_entropy(df, groupvar, countvar1, countvar2):
-    #Number of z
-    ngenome = df[countvar1].unique().size
-    #Number of z per group
-    n_per_group = df[[countvar1, groupvar]].drop_duplicates().groupby(groupvar).agg('count').rename(columns={countvar1:'n_per_group'})
-    #Counts of x per group
-    tax_cas_counts = df[[countvar1,groupvar,countvar2]].drop_duplicates().groupby([groupvar, countvar2]).agg('count').rename(columns={countvar1:'n_count'})
-    
-    counts = tax_cas_counts.join(n_per_group, how = 'outer')
-    counts['Pi'] = counts['n_count']/counts['n_per_group'] #observed probability
-    counts['Qi'] = counts['n_count']/ngenome #expected probability
-    counts['H'] = counts['Pi']*np.log2(counts['Pi']/counts['Qi']) #relative entropy
-    counts_reset = counts.reset_index()
-    return counts_reset
+
 
 
 # In[687]:
@@ -623,7 +610,7 @@ pd.set_option('display.max_rows', 500)
 # df_sample_entropy = relative_entropy_wide(df_sample, genome_col = 'BinID', group_col = 'Cluster ID')
 # df_sample_entropy.fillna(1e-99)
 
-#For each bootstrap replicate, take the mean entropy. Create a dataframe of mean entropies per 
+#For each bootstrap replicate, take the mean entropy. Create a dataframe of mean entropies per
 #group for each sampling.
 entropy_bootstrap = None
 entropy_bootstrap = relative_entropy_wide(ccs_pivot_taxonomy_notnull.sample(n=10000, replace=True, random_state=0), genome_col = 'BinID', group_col = 'Cluster ID')
@@ -652,7 +639,7 @@ def violin_swarm(df, plotid, ymin, ymax):
     #swarm.set_ylabel("Mean relative entropy H'",fontsize=22)
     #swarm.set_xlabel('CRISPR-Cas subtype', fontsize=22)
     #swarm.set_title(plotid, fontsize=20)
-    
+
     plt.ylabel("Mean normalized relative entropy (H')", fontsize=35)
     plt.title(plotid, fontsize=45)
     axes = plt.gca()
@@ -686,7 +673,7 @@ for tax in list(entropy_bootstrap['Cluster ID'].unique())[34:]:
     tax_entropy = entropy_bootstrap[entropy_bootstrap['Cluster ID'] == tax]
     tax_entropy = tax_entropy.loc[:, tax_entropy.columns != 'Cluster ID']
     violin_swarm(df = tax_entropy, plotid = tax, ymin=emin, ymax=emax)
-    
+
 
 
 # In[24]:
@@ -708,4 +695,3 @@ cas14_guaymas19[cas14_guaymas19['eval_dom'] <= 1e-20]
 #cas14_guaymas19[cas14_guaymas19['scaffold'] == 'Meg22_810_Bin_139']
 
 cas14_guaymas19[cas14_guaymas19['scaffold'].str.contains('Meg22_810_Bin_139_')]
-

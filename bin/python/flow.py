@@ -15,7 +15,7 @@ import magic
 import gzip
 import re
 import datetime
-import hmmer
+import hmmbo
 # FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 # logging.basicConfig(format=FORMAT)
 # logging.get_logger()
@@ -71,16 +71,19 @@ def make_seqdict(fasta, prodigal=False, gz=False):
     else:
         return seq_dict
 #------------------------------------------------------------------------------
-def fetch_gene_clusters(gff_df, prodigal_seq_dict, out_fasta, winsize):
+def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, anchor_col='source'):
     """
     Get Prodigal genes within a certain distance from a genomic feature.
     The gff_df must only contain 'anchor' genomic features, i.e. CRISPR array.
+    gene_seq_dict is a SeqIO Sequence Dict.
     """
     with open(out_fasta, 'w') as fa:
         neighbor_genes = []
         #Loop through records and fetch neighboring genes
-        for index, row in gff_df.iterrows():
-            seq_objs = [prodigal_seq_dict[key] for key in prodigal_seq_dict.keys() if row['source'] + '_' in key and prodigal_seq_dict[key]['gene_start'] >= row['start'] - winsize  and gene_stop <= row['end'] + winsize]
+        for index, row in gff_anchor.iterrows():
+            if gff_gene:
+
+            seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if anchor_col + '_' in key and gene_seq_dict[key]['gene_start'] >= row['start'] - winsize  and gene_seq_dict[key]['gene_stop'] <= row['end'] + winsize]
             neighbor_genes.extend(seq_objs)
         SeqIO.write(neighbor_genes, fa, 'fasta')
 #------------------------------------------------------------------------------
@@ -173,7 +176,7 @@ nargs = '?', help='Directory for log files.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
 help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4')
 parser.add_argument('--db_set', type=str, dest='db_set', action='store',
-nargs='?', type=str, help='Comma-separated list of HMM database paths to use for CRISPR-proximity gene hmmsearch. You can also specify paths to certain profiles, e.g. /path/to/K00001.hmm')
+nargs='?', help='Comma-separated list of HMM database paths to use for CRISPR-proximity gene hmmsearch. You can also specify paths to certain profiles, e.g. /path/to/K00001.hmm')
 parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
 help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
 
@@ -227,7 +230,7 @@ else:
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], fasta_basename + '_CRISPR-neighbor-genes.faa')
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, fasta_basename + '_CRISPR-neighbor-genes.fna')
-fetch_gene_clusters(gff_df=crispr_gff_df, prodigal_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent)
+fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent)
 #==============================================================================
 #Subtype the groups of CRISPR-neighboring genes
 macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
@@ -246,29 +249,31 @@ macsyfinder_optstring = optstring_join(macsyfinder_opts)
 macsyfinder_command = 'macsyfinder %s' % macsyfinder_optstring
 subprocess.run([macsyfinder_command])
 #==============================================================================
-hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42}
-
-hmmsearch_joblog = os.path.join(output_paths['HMMER'], 'hmmsearch_joblog_' + now.strftime('%D-%M-%Y_%H:%M'))
-
-if ',' in opts.db_set:
-    db_list = ','.split(opts.db_set)
-    pfiles = []
-    for db in db_list:
-        if os.path.isdir(db):
-            if opts.jobs > 1:
-                command_generate(seqdb=neighbor_aa_fasta, profile=db,
-                optdict=hmmsearch_opts, jobs=opts.jobs, joblog=hmmsearch_joblog,
-                outdir=output_paths['HMMER'], psuffix='.hmm', optdict=hmmsearch_opts,
-                parallel=True, jobs=opts.jobs, joblog=hmmsearch_joblog)
-
-        elif os.path.isfile(db):
-            pfiles.append(db)
-
-hmmer.hmmsearch_command_generate(seqdb=neighbor_aa_fasta, profile=, optdict=hmmsearch_opts)
-
-seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*
+###---HMMSEARCH---###
+# hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42}
+#
+# hmmsearch_joblog = os.path.join(output_paths['HMMER'], 'hmmsearch_joblog_' + now.strftime('%D-%M-%Y_%H:%M'))
+#
+# if ',' in opts.db_set:
+#     db_list = ','.split(opts.db_set)
+#     pfiles = []
+#     for db in db_list:
+#         if os.path.isdir(db):
+#             if opts.jobs > 1:
+#                 command_generate(seqdb=neighbor_aa_fasta, profile=db,
+#                 optdict=hmmsearch_opts, jobs=opts.jobs, joblog=hmmsearch_joblog,
+#                 outdir=output_paths['HMMER'], psuffix='.hmm', optdict=hmmsearch_opts,
+#                 parallel=True, jobs=opts.jobs, joblog=hmmsearch_joblog)
+#
+#         elif os.path.isfile(db):
+#             pfiles.append(db)
+#
+# hmmer.command_generate(seqdb=neighbor_aa_fasta, profile=, optdict=hmmsearch_opts)
+#
+# seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*
 #==============================================================================
-transposase_dict = dict()
+#transposase_dict = dict()
+#==============================================================================
 #Read in the nucleotide scaffolds
 # scaffold_handle = open(opts.scaffold_file, 'r')
 # scaffold_obj = SeqIO.to_dict(SeqIO.parse(scaffold_handle), 'fasta')
