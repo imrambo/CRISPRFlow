@@ -256,7 +256,7 @@ if ',' in opts.db_set:
     for db in db_list:
         if os.path.isdir(db):
             if opts.jobs > 1:
-                hmmsearch_command_generate(seqdb=neighbor_aa_fasta, profile=db,
+                command_generate(seqdb=neighbor_aa_fasta, profile=db,
                 optdict=hmmsearch_opts, jobs=opts.jobs, joblog=hmmsearch_joblog,
                 outdir=output_paths['HMMER'], psuffix='.hmm', optdict=hmmsearch_opts,
                 parallel=True, jobs=opts.jobs, joblog=hmmsearch_joblog)
