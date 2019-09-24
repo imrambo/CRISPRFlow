@@ -167,8 +167,6 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
 #     return commands
 #==============================================================================
 build_root = '../..'
-#db_ids = ['CAS', 'KO', 'PFAM', 'TIGR']
-#regex = r'%s\d+' % '|'.join(db_ids)
 #==============================================================================
 parser = argparse.ArgumentParser()
 

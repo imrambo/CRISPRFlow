@@ -117,7 +117,7 @@ def hmmsearch_command_generator(db_list, hmmsearch_optdict, parallel_optdict=Non
             else:
                 for profile in dbfiles:
                     hmmsearch_optdict['--domtbl'] = os.path.join(out_dir, '%s_%s.domtbl' % (get_basename(seqdb), get_basename(profile)))
-                    hmmsearch_command = 'hmmsearch %s' % optstring_join(hmmsearch_optdict)
+                    hmmsearch_command = 'hmmsearch %s %s %s' % (optstring_join(hmmsearch_optdict), profile, seqdb)
                     commands.append(hmmsearch_command)
 
         #Search one profile at a time
