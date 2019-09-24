@@ -210,6 +210,12 @@ for key, value in output_paths:
         os.makedirs(value)
     else:
         pass
+
+#Create the joblog directory if not specified
+if not os.path.exists(opts.joblog_dir):
+    os.makedirs(opts.joblog_dir)
+else:
+    pass
 #==============================================================================
 #Options for GNU parallel
 parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
