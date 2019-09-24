@@ -200,11 +200,11 @@ help='suffix for HMM gene profiles. Default is ".hmm"')
 
 opts = parser.parse_args()
 
-if opts.jobs < 1:
+if opts.jobs[0] < 1:
     logging.warning('--jobs must be >= 1')
 #==============================================================================
 #Create the output directories
-output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
+output_paths = {p: os.path.join(opts.out_root[0], p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
 for key, value in output_paths:
     if not os.path.exists(value):
         os.makedirs(value)
@@ -212,13 +212,13 @@ for key, value in output_paths:
         pass
 
 #Create the joblog directory if not specified
-if not os.path.exists(opts.joblog_dir):
-    os.makedirs(opts.joblog_dir)
+if not os.path.exists(opts.joblog_dir[0]):
+    os.makedirs(opts.joblog_dir[0])
 else:
     pass
 #==============================================================================
 #Options for GNU parallel
-parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
+parallel_optdict = {'--jobs':opts.jobs[0], '--bar':''}
 
 #Get the file basename to name output files
 fasta_basename = get_basename(opts.fasta_file)
@@ -287,7 +287,7 @@ seqdb = neighbor_aa_fasta
 #Generate the command strings
 if ',' in opts.database:
     database_list = ','.split(opts.database)
-    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=database_list, hmmsearch_optdict=hmmsearch_opts, parallel_optdict=None, jobs=1)
+    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=database_list, hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
 
 else:
-    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=None, jobs=1)
+    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
