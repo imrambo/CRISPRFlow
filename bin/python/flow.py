@@ -224,6 +224,7 @@ parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 #Get the file basename to name output files
 fasta_basename = get_basename(opts.fasta_file)
 #==============================================================================
+print(fasta_basename)
 ###---CRISPRDetect---###
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect')
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect.log')
