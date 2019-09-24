@@ -98,14 +98,14 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
             neighbor_genes.extend(seq_objs)
         SeqIO.write(neighbor_genes, fa, 'fasta')
 #------------------------------------------------------------------------------
-def command_generator(seqdb, profile, prefix=None, optdict=None, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
+def command_generator(seqdb, profile, prefix=None, optstring, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
     """
     Generate a list of bash command strings.
     Use parallel=True to run parallel jobs using GNU parallel.
     Pass an ordered dictionary if parameter order matters.
     """
-    if not prefix:
-        prefix = get_basename(seqdb)
+    # if not prefix:
+    #     prefix = get_basename(seqdb)
 
     commands = []
 
@@ -120,7 +120,7 @@ def command_generator(seqdb, profile, prefix=None, optdict=None, parallel=False,
 
         elif os.path.isfile(profile):
             #Run program for a single profile
-            optstring = optstring_join(optdict)
+            #optstring = optstring_join(optdict)
             cmd = '%s %s' % (program, optstring)
             commands.append(cmd)
         else:
@@ -133,7 +133,7 @@ def command_generator(seqdb, profile, prefix=None, optdict=None, parallel=False,
         parallel_optdict['--joblog'] = joblog
         parallel_optstring = opstring_join(parallel_optdict)
 
-        optstring = optstring_join(optdict)
+        #optstring = optstring_join(optdict)
         if os.path.isdir(profile):
             cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (profile, psuffix, parallel_optstring, program, optstring, seqdb)
             commands.append(cmd)
@@ -243,10 +243,10 @@ fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_f
 #Subtype the groups of CRISPR-neighboring genes
 macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
 '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
-'--def':'../data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
+'--def':'%s/data/definitions/%s' % (build_root, opts.ccs_typing), '--out-dir':output_paths['MacSyFinder'],
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-'--profile-suffix':'hmm', '--profile-dir':'../data/profiles/CAS',
-'--worker':opts.threads, '--verbosity':'-vv'}
+'--profile-suffix':'hmm', '--profile-dir':'%s/data/profiles/CAS' % build_root,
+'--worker':opts.threads, '-vv':''}
 
 if opts.joblog_dir:
     macsyfinder_opts['--log'] = opts.joblog_dir
@@ -254,8 +254,10 @@ else:
     macsyfinder_opts['--log'] = output_paths['MacSyFinder']
 
 macsyfinder_optstring = optstring_join(macsyfinder_opts)
-macsyfinder_command = command_generator(program='macsyfinder', optdict=macsyfinder_opts,
-seqdb=prodigal_command[1]['-a'])
+macsyfinder_optstring = macsyfinder_optstring + ' ' + 'all'
+
+macsyfinder_command = command_generator(program='macsyfinder', optstring=macsyfinder_optstring,
+
 seqdb, profile, prefix=None, optdict=None, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog')
 #macsyfinder_command = 'macsyfinder %s' % macsyfinder_optstring
 #subprocess.run([macsyfinder_command])
