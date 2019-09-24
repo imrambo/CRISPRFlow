@@ -205,6 +205,7 @@ if opts.jobs < 1:
 #==============================================================================
 #Create the output directories
 output_paths = {p: os.path.join(opts.out_root[0], p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
+print(output_paths)
 for key, value in output_paths:
     if not os.path.exists(value):
         os.makedirs(value)
