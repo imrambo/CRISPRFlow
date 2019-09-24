@@ -230,7 +230,7 @@ crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], fasta_basename + 
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect.log')
 #CRISPRDetect options
 crispr_detect_opts = {'-f':opts.fasta_file,
-'-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':23,
+'-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':20,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
  '-logfile':crispr_detect_log}
 
