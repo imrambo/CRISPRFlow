@@ -50,6 +50,87 @@ def hmm_builder(seqs, name, muscle_iter, suffix):
     subprocess.run([joined_command])
     return
 #------------------------------------------------------------------------------
+def hmmsearch_command_generator(db_list, hmmsearch_optdict, parallel_optdict=None, jobs=1):
+    """
+    Generate command strings for hmmsearch. Set jobs > 1 for GNU Parallel mode.
+    Returns a list of command strings.
+    """
+    commands = []
+    dbfiles = [d for d in db_list if os.path.isfile(d)]
+    dbdirs = [d for d in db_list if os.path.isdir(d)]
+
+    if jobs > 1 and not parallel_optdict:
+        parallel_optdict = {'--jobs':jobs}
+    #Loop through the directory paths, and run hmmsearch for all profiles in
+    #the path
+    if dbdirs:
+        for db in dbdirs:
+            db_basename = get_basename(db)
+            hmmsearch_joblog = os.path.join(output_paths['HMMER'], 'hmmsearch_joblog_%s_%s' % (db_basename, now.strftime('%D-%M-%Y_%H:%M')))
+            out_dir = os.path.mkdirs(os.path.join(output_paths['HMMER'], db_basename))
+
+            if jobs > 1:
+                parallel_optdict['--joblog'] = hmmsearch_joblog
+                parallel_optstring = optstring_join(parallel_optdict)
+                parallel_command = 'parallel %s' % parallel_optstring
+
+                hmmsearch_optdict['--domtbl'] = os.path.join(out_dir, '%s_{/.}.domtbl' % get_basename(seqdb))
+                optdicttring = optstring.join(optdict)
+                hmmsearch_command = 'hmmsearch %s {} %s' % (optdicttring, seqdb)
+
+                parahmm_command = 'find %s -name "*%s" | %s %s' % (db, opts.profile_suffix, parallel_command, hmmsearch_command)
+                commands.append(parahmm_command)
+
+            else:
+                #Run each hmmsearch in a for loop
+                profile_glob = os.path.join(db, '*%s' % opts.profile_suffix)
+                for profile in list(glob.glob(profile_glob, recursive = False)):
+                    hmmsearch_optdict['--domtbl'] = os.path.join(out_dir, '%s_%s.domtbl' % (get_basename(seqdb), get_basename(profile)))
+                    hmmsearch_command = 'hmmsearch %s %s %s' % (optstring_join(optdict), profile, seqdb)
+                    commands.append(hmmsearch_command)
+    #Run hmmsearch for individual files
+    elif dbfiles:
+        if len(dbfiles) > 1:
+            if jobs > 1:
+                #temporary file containing paths for input HMM profiles
+                path_file = os.path.join(opts.tmp_dir, 'profile_paths_%s' % now.strftime('%D-%M-%Y_%H:%M'))
+                try:
+                    with open(path_file, 'w') as pf:
+                        for d in dbfiles:
+                            pf.write('%s\n' % d)
+                except IOError:
+                    'Unable to write hmmsearch input profile file paths to %s' % path_file
+
+                hmmsearch_joblog = os.path.join(output_paths['HMMER'], 'hmmsearch_joblog_%s_%s' % ('individual', now.strftime('%D-%M-%Y_%H:%M')))
+                out_dir = os.path.mkdirs(os.path.join(output_paths['HMMER'], 'individual'))
+
+                parallel_optdict['--joblog'] = hmmsearch_joblog
+                parallel_optstring = optstring_join(parallel_optdict)
+                parallel_command = 'parallel %s' % parallel_optstring
+
+                hmmsearch_optdict['--domtbl'] = os.path.join(out_dir, '%s_{/.}.domtbl' % get_basename(seqdb))
+                hmmsearch_optstring = optstring.join(optdict)
+                hmmsearch_command = 'hmmsearch %s {} %s' % (hmmsearch_optstring, seqdb)
+
+                parahmm_command = '%s %s :::: %s' % (parallel_command, hmmsearch_command, path_file)
+                commands.append(parahmm_command)
+            else:
+                for profile in dbfiles:
+                    hmmsearch_optdict['--domtbl'] = os.path.join(out_dir, '%s_%s.domtbl' % (get_basename(seqdb), get_basename(profile)))
+                    hmmsearch_command = 'hmmsearch %s' % optstring_join(hmmsearch_optdict)
+                    commands.append(hmmsearch_command)
+
+        #Search one profile at a time
+    elif len(dbfiles) == 1:
+        hmmsearch_optdict['--domtbl'] = os.path.join(out_dir, '%s_%s.domtbl' % (get_basename(seqdb), get_basename(dbfiles[0])))
+        hmmsearch_command = 'hmmsearch %s %s %s' % (optstring_join(hmmsearch_optdict), dbfiles[0], seqdb)
+        commands.append(hmmsearch_command)
+
+    else:
+        pass
+    return commands
+#------------------------------------------------------------------------------
+#BONEYARD
 # def hmmsearch_command_generate(seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*, progbar=False):
 #     """
 #     Generate a command string to run hmmsearch.

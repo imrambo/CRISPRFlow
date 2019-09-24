@@ -19,9 +19,19 @@ import re
 import datetime
 import hmmbo
 import prodigal
+
 # FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 # logging.basicConfig(format=FORMAT)
 # logging.get_logger()
+
+#REFERENCES
+#CRISPRDetect
+#MacSyFinder
+#Prodigal
+#GNU Parallel
+#HMMER
+#CRISPRCasFinder group (DEF and profiles)
+#Banfield group (Cas14)
 #==============================================================================
 def optstring_join(optdict):
     """
@@ -92,73 +102,73 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
         neighbor_genes = []
         #Loop through records and fetch neighboring genes
         for index, row in gff_anchor.iterrows():
-            if gff_gene:
-
+            #if gff_gene:
             seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if row[anchor_col] + '_' in key and gene_seq_dict[key]['gene_start'] >= row['start'] - winsize  and gene_seq_dict[key]['gene_stop'] <= row['end'] + winsize]
             neighbor_genes.extend(seq_objs)
         SeqIO.write(neighbor_genes, fa, 'fasta')
 #------------------------------------------------------------------------------
-def command_generator(seqdb, profile, prefix=None, optstring, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
-    """
-    Generate a list of bash command strings.
-    Use parallel=True to run parallel jobs using GNU parallel.
-    Pass an ordered dictionary if parameter order matters.
-    """
-    # if not prefix:
-    #     prefix = get_basename(seqdb)
-
-    commands = []
-
-    if parallel and jobs == 1:
-        parallel = False
-    if not parallel:
-        if os.path.isdir(profile):
-            profile_glob = os.path.join(profile, '*%s' % psuffix)
-            for i in list(glob.glob(profile_glob, recursive = False)):
-                cmd = '%s %s %s %s' % (program, optstring, i, seqdb)
-                commands.append(cmd)
-
-        elif os.path.isfile(profile):
-            #Run program for a single profile
-            #optstring = optstring_join(optdict)
-            cmd = '%s %s' % (program, optstring)
-            commands.append(cmd)
-        else:
-            pass
-    elif parallel and jobs > 1:
-        #Build the parallel string
-        parallel_optdict = {'--jobs':jobs}
-        if progbar:
-            parallel_optdict['--bar'] = ''
-        parallel_optdict['--joblog'] = joblog
-        parallel_optstring = opstring_join(parallel_optdict)
-
-        #optstring = optstring_join(optdict)
-        if os.path.isdir(profile):
-            cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (profile, psuffix, parallel_optstring, program, optstring, seqdb)
-            commands.append(cmd)
-        """
-        If a list of paths is provided, break it up into files and directories
-        and generate strings.
-        """
-        if isinstance(profile, list):
-            pfiles = [os.path.isfile(p) for p in profile]
-            pdirs = [os.path.isdir(p) for p in profile]
-            if len(pfiles) + len(pdirs) == len(profile):
-                    if pdirs:
-                        for pdir in pdirs:
-                            cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (pdir, psuffix, parallel_optstring, program, optstring, seqdb)
-                            commands.append(cmd)
-                    if pfiles and len(pfiles) > 1:
-                        cmd = 'parallel %s %s %s {} %s ::: %s' % (parallel_optstring, program, optstring, seqdb, ' '.join(pfiles))
-                        commands.append(cmd)
-    else:
-        pass
-    return commands
+# def command_generator(seqdb, profile, prefix=None, optstring, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
+#     """
+#     Generate a list of bash command strings.
+#     Use parallel=True to run parallel jobs using GNU parallel.
+#     Pass an ordered dictionary if parameter order matters.
+#     """
+#     #  BREAK THIS UP INTO FUNCTIONS
+#     # if not prefix:
+#     #     prefix = get_basename(seqdb)
+#
+#     commands = []
+#
+#     if parallel and jobs == 1:
+#         parallel = False
+#     if not parallel:
+#         if os.path.isdir(profile):
+#             profile_glob = os.path.join(profile, '*%s' % psuffix)
+#             for i in list(glob.glob(profile_glob, recursive = False)):
+#                 cmd = '%s %s %s %s' % (program, optstring, i, seqdb)
+#                 commands.append(cmd)
+#
+#         elif os.path.isfile(profile):
+#             #Run program for a single profile
+#             #optstring = optstring_join(optdict)
+#             cmd = '%s %s' % (program, optstring)
+#             commands.append(cmd)
+#         else:
+#             pass
+#     elif parallel and jobs > 1:
+#         #Build the parallel string
+#         parallel_optdict = {'--jobs':jobs}
+#         if progbar:
+#             parallel_optdict['--bar'] = ''
+#         parallel_optdict['--joblog'] = joblog
+#         parallel_optstring = opstring_join(parallel_optdict)
+#
+#         #optstring = optstring_join(optdict)
+#         if os.path.isdir(profile):
+#             cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (profile, psuffix, parallel_optstring, program, optstring, seqdb)
+#             commands.append(cmd)
+#         """
+#         If a list of paths is provided, break it up into files and directories
+#         and generate strings.
+#         """
+#         if isinstance(profile, list):
+#             pfiles = [os.path.isfile(p) for p in profile]
+#             pdirs = [os.path.isdir(p) for p in profile]
+#             if len(pfiles) + len(pdirs) == len(profile):
+#                     if pdirs:
+#                         for pdir in pdirs:
+#                             cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (pdir, psuffix, parallel_optstring, program, optstring, seqdb)
+#                             commands.append(cmd)
+#                     if pfiles and len(pfiles) > 1:
+#                         cmd = 'parallel %s %s %s {} %s ::: %s' % (parallel_optstring, program, optstring, seqdb, ' '.join(pfiles))
+#                         commands.append(cmd)
+#     else:
+#         pass
+#     return commands
 #==============================================================================
 build_root = '../..'
-db_ids = ['CAS', 'KO', 'PFAM', 'TIGR']
-regex = r'%s\d+' % '|'.join(db_ids)
+#db_ids = ['CAS', 'KO', 'PFAM', 'TIGR']
+#regex = r'%s\d+' % '|'.join(db_ids)
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -183,12 +193,17 @@ parser.add_argument('--joblog_dir', type=str, dest='joblog_dir', action='store',
 nargs = '?', help='Directory for log files.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
 help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4')
-parser.add_argument('--db_set', type=str, dest='db_set', action='store',
+parser.add_argument('--database', type=str, dest='database', action='store',
 nargs='?', help='Comma-separated list of HMM database paths to use for CRISPR-proximity gene hmmsearch. You can also specify paths to certain profiles, e.g. /path/to/K00001.hmm')
 parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
 help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
+parser.add_argument('--profile_suffix', type=str, dest='profile_suffix', action='store', default='.hmm',
+help='suffix for HMM gene profiles. Default is ".hmm"')
 
 opts = parser.parse_args()
+
+if opts.jobs < 1:
+    logging.warning('--jobs must be >= 1')
 #==============================================================================
 #Create the output directories
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
@@ -198,6 +213,9 @@ for key, value in output_paths:
     else:
         pass
 #==============================================================================
+#Options for GNU parallel
+parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
+
 #Get the file basename to name output files
 fasta_basename = get_basename(opts.fasta_file)
 #==============================================================================
@@ -253,71 +271,19 @@ if opts.joblog_dir:
 else:
     macsyfinder_opts['--log'] = output_paths['MacSyFinder']
 
-macsyfinder_optstring = optstring_join(macsyfinder_opts)
-macsyfinder_optstring = macsyfinder_optstring + ' ' + 'all'
-
-macsyfinder_command = command_generator(program='macsyfinder', optstring=macsyfinder_optstring,
-
-seqdb, profile, prefix=None, optdict=None, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog')
-#macsyfinder_command = 'macsyfinder %s' % macsyfinder_optstring
+macsyfinder_command = 'macsyfinder %s %s' % (optstring_join(macsyfinder_opts), 'all')
+print(macsyfinder_command)
 #subprocess.run([macsyfinder_command])
 #==============================================================================
-###---HMMSEARCH---###
-# hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42}
-#
-# hmmsearch_joblog = os.path.join(output_paths['HMMER'], 'hmmsearch_joblog_' + now.strftime('%D-%M-%Y_%H:%M'))
-#
-# if ',' in opts.db_set:
-#     db_list = ','.split(opts.db_set)
-#     pfiles = []
-#     for db in db_list:
-#         if os.path.isdir(db):
-#             if opts.jobs > 1:
-#                 command_generate(seqdb=neighbor_aa_fasta, profile=db,
-#                 optdict=hmmsearch_opts, jobs=opts.jobs, joblog=hmmsearch_joblog,
-#                 outdir=output_paths['HMMER'], psuffix='.hmm', optdict=hmmsearch_opts,
-#                 parallel=True, jobs=opts.jobs, joblog=hmmsearch_joblog)
-#
-#         elif os.path.isfile(db):
-#             pfiles.append(db)
-#
-# hmmer.command_generate(seqdb=neighbor_aa_fasta, profile=, optdict=hmmsearch_opts)
-#
-# seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*
-#==============================================================================
-#transposase_dict = dict()
-#==============================================================================
-#Read in the nucleotide scaffolds
-# scaffold_handle = open(opts.scaffold_file, 'r')
-# scaffold_obj = SeqIO.to_dict(SeqIO.parse(scaffold_handle), 'fasta')
+##---HMMSEARCH---###
+hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42, '--cpu':1}
 
-# #Jackhmmer options
-# jackhmmer_opts = {'--mx':'BLOSUM62', '-E':1e-20, '--domE':1e-20, '-N':20,
-# '--incE':1e-20, '--incdomE':1e-20, '--F1':0.01, '--seed':42, '--cpu':4,
-# '--noali':''}
+seqdb = neighbor_aa_fasta
 
-# #Run HMMsearches
-# hmm_dir = './hmm'
-# if not opts.db_set:
-#     for database in os.walk(hmm_dir, maxdepth = 1):
-#         if parallel:
-#             hmmsearch_command = 'find %s -type f -name "*.hmm" | parallel %s hmmsearch --domtblout %s/%s_{/.}.domtbl %s %s %s_{./}' % (database, hmmsearch_parallel_opts, hmmsearch_optstring, neighbor_aa_fasta)
-#             subprocess.run([hmmsearch_command])
-#         else:
-#             hmmsearch_command = 'hmmsearch --domtblout %s/%s_{/.}.domtbl %s %s %s_{./}'
-#         #Gather the hits and select the best hits
-#         hmmer_best_hits = os.path.join(hmmer_outdir, 'hmmsearch_best_hits.domtbl')
-#         hmmsearch_hits_command = 'grep -h ID %s/*.domtbl > %s' % (hmmer_outdir, hmmer_best_hits)
-#
-# subprocess.run([hmmsearch_hits_command])
-#
-# dbh_df = domtbl_besthits(hmmer_best_hits)
-#==============================================================================
-#==============================================================================
-# ###---CRISPRCasFinder---###
-#  ccfinder_opts = {'-log':'', '-copyCSS':'', '-repeats':'', '-DBcrispr':'',
-# '-DIRrepeat':'', '-cas':'', '-ccvRep':'', '-vicinity':10000, '-cluster':20000,
-# '-minDR':23, '-maxDR':72, '-minSP':8, '-maxSP':64, '-cpuM':1,
-# '-definition':'SubTyping', '-getSummaryCasfinder':'', '-betterDetectTrunc':'',
-# '-soFile':ccfinder_sofile, '-keep':''}
-# ccfinder_optstring = optstring_join(ccfinder_opts)
+#Generate the command strings
+if ',' in opts.database:
+    database_list = ','.split(opts.database)
+    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=database_list, hmmsearch_optdict=hmmsearch_opts, parallel_optdict=None, jobs=1)
+
+else:
+    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=None, jobs=1)
