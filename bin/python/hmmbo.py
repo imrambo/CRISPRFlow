@@ -50,6 +50,8 @@ def hmm_builder(seqs, name, muscle_iter, suffix):
     subprocess.run([joined_command])
     return
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 # def hmmsearch_command_generate(seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*, progbar=False):
 #     """
 #     Generate a command string to run hmmsearch.
@@ -103,62 +105,3 @@ def hmm_builder(seqs, name, muscle_iter, suffix):
 #                         commands.append(hmmsearch_command)
 
 #------------------------------------------------------------------------------
-def command_generator(seqdb, profile, prefix=None, optdict=None, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
-    """
-    Generate a list of bash command strings.
-    Use parallel=True to run parallel jobs using GNU parallel.
-    Pass an ordered dictionary if parameter order matters.
-    """
-    if not prefix:
-        prefix = get_basename(seqdb)
-
-    commands = []
-
-    if parallel and jobs == 1:
-        parallel = False
-    if not parallel:
-        if os.path.isdir(profile):
-            profile_glob = os.path.join(profile, '*%s' % psuffix)
-            for i in list(glob.glob(profile_glob, recursive = False)):
-                cmd = '%s %s %s %s' % (program, optstring, i, seqdb)
-                commands.append(cmd)
-
-        elif os.path.isfile(profile):
-            #Run program for a single profile
-            optstring = optstring_join(optdict)
-            # #special for hmmsearch <3
-            # if program == 'hmmsearch' and if not optstring['--domtbl']:
-            #     domtbl = os.path.join(outdir, prefix + '.domtbl')
-            cmd = '%s %s' % (program, optstring)
-            commands.append(cmd)
-        else:
-            pass
-    elif parallel and jobs > 1:
-        #Build the parallel string
-        parallel_optdict = {'--jobs':jobs}
-        if progbar:
-            parallel_optdict['--bar'] = ''
-        parallel_optdict['--joblog'] = joblog
-        parallel_optstring = opstring_join(parallel_optdict)
-
-        optstring = optstring_join(optdict)
-        if os.path.isdir():
-            cmd = 'find %s -type f -name "*%s" | parallel %s %s --domtbl %s/{/.}_%s.domtbl %s {} %s' % (pdir, psuffix, parallel_optstring, program, outdir, prefix, optstring, seqdb)
-            commands.append(cmd)
-        """
-        If a list of profile paths is provided
-        """
-        if isinstance(profile, list):
-            pfiles = [os.path.isfile(p) for p in profile]
-            pdirs = [os.path.isdir(p) for p in profile]
-            if len(pfiles) + len(pdirs) == len(profile):
-                    if pdirs:
-                        for pdir in pdirs:
-                            cmd = 'find %s -type f -name "*%s" | parallel %s %s --domtbl %s/{/.}_%s.domtbl %s {} %s' % (pdir, psuffix, parallel_optstring, program, outdir, prefix, hmmsearch_optstring, seqdb)
-                            commands.append(cmd)
-                    if pfiles and len(pfiles) > 1:
-                        cmd = 'parallel %s %s --domtbl %s/{/.}_%s.domtbl %s {} %s ::: %s' % (parallel_optstring, program, outdir, prefix, hmmsearch_optstring, seqdb, ' '.join(pfiles))
-                        commands.append(cmd)
-    else:
-        pass
-    return commands

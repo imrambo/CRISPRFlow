@@ -3,6 +3,8 @@ Motivation:
 
 Author: Ian Rambo
 Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
+
+Thirteen... that's a mighty unlucky number... for somebody!
 """
 from Bio import SeqIO
 import argparse
@@ -16,6 +18,7 @@ import gzip
 import re
 import datetime
 import hmmbo
+import prodigal
 # FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 # logging.basicConfig(format=FORMAT)
 # logging.get_logger()
@@ -40,6 +43,14 @@ def gff_to_pddf(gff, ftype=''):
             return gff_df
         else:
             return gff_df
+#------------------------------------------------------------------------------
+def get_basename(file_path):
+    basename = os.path.basename(opts.fasta_file)
+    #Remove two extensions, e.g. foo.tar.gz becomes foo
+    if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
+        basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
+    else:
+        basename = os.path.splitext(basename)[0]
 #------------------------------------------------------------------------------
 def is_gzipped(file_path):
     """
@@ -87,66 +98,63 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
             neighbor_genes.extend(seq_objs)
         SeqIO.write(neighbor_genes, fa, 'fasta')
 #------------------------------------------------------------------------------
-def prodigal_mode_select(fasta, version=2):
+def command_generator(seqdb, profile, prefix=None, optdict=None, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
     """
-    Select the correct Prodigal mode based on sequence lengths.
+    Generate a list of bash command strings.
+    Use parallel=True to run parallel jobs using GNU parallel.
+    Pass an ordered dictionary if parameter order matters.
     """
-    pgz = is_gzip(fasta)
-    seq_dict = make_seqdict(fasta=fasta, gz=pgz)
+    if not prefix:
+        prefix = get_basename(seqdb)
 
-    if any([len(seq_dict[key]['sequence']) < 20000 for key in seq_dict.keys()]):
-        if version == 2:
-            mode = 'meta'
-        elif version == 3:
-            mode = 'anon'
+    commands = []
+
+    if parallel and jobs == 1:
+        parallel = False
+    if not parallel:
+        if os.path.isdir(profile):
+            profile_glob = os.path.join(profile, '*%s' % psuffix)
+            for i in list(glob.glob(profile_glob, recursive = False)):
+                cmd = '%s %s %s %s' % (program, optstring, i, seqdb)
+                commands.append(cmd)
+
+        elif os.path.isfile(profile):
+            #Run program for a single profile
+            optstring = optstring_join(optdict)
+            cmd = '%s %s' % (program, optstring)
+            commands.append(cmd)
         else:
             pass
+    elif parallel and jobs > 1:
+        #Build the parallel string
+        parallel_optdict = {'--jobs':jobs}
+        if progbar:
+            parallel_optdict['--bar'] = ''
+        parallel_optdict['--joblog'] = joblog
+        parallel_optstring = opstring_join(parallel_optdict)
+
+        optstring = optstring_join(optdict)
+        if os.path.isdir(profile):
+            cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (profile, psuffix, parallel_optstring, program, optstring, seqdb)
+            commands.append(cmd)
+        """
+        If a list of paths is provided, break it up into files and directories
+        and generate strings.
+        """
+        if isinstance(profile, list):
+            pfiles = [os.path.isfile(p) for p in profile]
+            pdirs = [os.path.isdir(p) for p in profile]
+            if len(pfiles) + len(pdirs) == len(profile):
+                    if pdirs:
+                        for pdir in pdirs:
+                            cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (pdir, psuffix, parallel_optstring, program, optstring, seqdb)
+                            commands.append(cmd)
+                    if pfiles and len(pfiles) > 1:
+                        cmd = 'parallel %s %s %s {} %s ::: %s' % (parallel_optstring, program, optstring, seqdb, ' '.join(pfiles))
+                        commands.append(cmd)
     else:
-        if version == 2:
-            mode = 'single'
-        elif version == 3:
-            mode = 'normal'
-        else:
-            pass
-    return mode,pgz
-#------------------------------------------------------------------------------
-def get_basename(file_path):
-    basename = os.path.basename(opts.fasta_file)
-    #Remove two extensions, e.g. foo.tar.gz becomes foo
-    if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
-        basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
-    else:
-        basename = os.path.splitext(basename)[0]
-#------------------------------------------------------------------------------
-def prodigal_command_generate(ntfasta, outdir, prefix, outfmt='gff', version=2):
-    """
-    Generate a command string to run Prodigal on a fasta file.
-    """
-    #HOW CAN I EXTRACT THE OUTPUT OF prodigal -v ???
-    prodigal_mode = prodigal_mode_select(ntfasta, version=version)
-
-    prodigal_out = os.path.join(outdir, prefix + '_prodigal.gff')
-    prodigal_aa = os.path.join(outdir, prefix + '_prodigal.faa')
-    prodigal_nt = os.path.join(outdir, prefix + '_prodigal.fna')
-
-    prodigal_opts = {'-p':prodigal_mode[0], '-o':prodigal_out,
-    '-a':prodigal_aa, '-d':prodigal_nt, '-f':outfmt}
-
-    #Input file is gzipped, use a pipe and omit input option
-    if prodigal_mode[1]:
-        if '-i' in prodigal_opts:
-            del prodigal_opts['-i']
-        prodigal_optstring = optstring_join(prodigal_opts)
-        prodigal_command = 'zcat %s | prodigal %s' % (ntfasta, prodigal_optstring)
-
-    else:
-        if not prodigal_opts['-i']:
-            prodigal_opts['-i'] = ntfasta
-        prodigal_optstring = optstring_join(prodigal_opts)
-        prodigal_command = 'prodigal %s' % (ntfasta, prodigal_optstring)
-
-    return prodigal_command,prodigal_opts
-
+        pass
+    return commands
 #==============================================================================
 build_root = '../..'
 db_ids = ['CAS', 'KO', 'PFAM', 'TIGR']
@@ -246,8 +254,11 @@ else:
     macsyfinder_opts['--log'] = output_paths['MacSyFinder']
 
 macsyfinder_optstring = optstring_join(macsyfinder_opts)
-macsyfinder_command = 'macsyfinder %s' % macsyfinder_optstring
-subprocess.run([macsyfinder_command])
+macsyfinder_command = command_generator(program='macsyfinder', optdict=macsyfinder_opts,
+seqdb=prodigal_command[1]['-a'])
+seqdb, profile, prefix=None, optdict=None, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog')
+#macsyfinder_command = 'macsyfinder %s' % macsyfinder_optstring
+#subprocess.run([macsyfinder_command])
 #==============================================================================
 ###---HMMSEARCH---###
 # hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42}
