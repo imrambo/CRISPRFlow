@@ -206,7 +206,7 @@ if opts.jobs < 1:
 #==============================================================================
 #Create the output directories
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
-print(output_paths)
+
 for key, value in output_paths.items():
     if not os.path.exists(value):
         os.makedirs(value)
@@ -225,7 +225,6 @@ parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 #Get the file basename to name output files
 fasta_basename = get_basename(opts.fasta_file)
 #==============================================================================
-print(fasta_basename)
 ###---CRISPRDetect---###
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect')
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect.log')
