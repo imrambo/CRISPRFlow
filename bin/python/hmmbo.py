@@ -50,8 +50,6 @@ def hmm_builder(seqs, name, muscle_iter, suffix):
     subprocess.run([joined_command])
     return
 #------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
 # def hmmsearch_command_generate(seqdb, profile, outdir, psuffix='.hmm', optdict, prefix*, parallel=False, jobs*, joblog*, progbar=False):
 #     """
 #     Generate a command string to run hmmsearch.

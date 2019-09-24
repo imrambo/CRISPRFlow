@@ -94,7 +94,7 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
         for index, row in gff_anchor.iterrows():
             if gff_gene:
 
-            seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if anchor_col + '_' in key and gene_seq_dict[key]['gene_start'] >= row['start'] - winsize  and gene_seq_dict[key]['gene_stop'] <= row['end'] + winsize]
+            seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if row[anchor_col] + '_' in key and gene_seq_dict[key]['gene_start'] >= row['start'] - winsize  and gene_seq_dict[key]['gene_stop'] <= row['end'] + winsize]
             neighbor_genes.extend(seq_objs)
         SeqIO.write(neighbor_genes, fa, 'fasta')
 #------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_f
 #==============================================================================
 #Subtype the groups of CRISPR-neighboring genes
 macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
-'--e-value-search':1e-6, '--i-evalue-select':1e-4, '--coverage_profile':0.5,
+'--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
 '--def':'../data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'hmm', '--profile-dir':'../data/profiles/CAS',

@@ -1,4 +1,13 @@
 #!/usr/bin/python3
+"""
+Motivation: functions for use with Prodigal.
+
+Author: Ian Rambo
+Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
+
+Thirteen... that's a mighty unlucky number... for somebody!
+"""
+import gzip
 
 def prodigal_mode_select(fasta, version=2):
     """
