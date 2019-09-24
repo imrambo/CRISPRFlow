@@ -213,13 +213,13 @@ for key, value in output_paths.items():
         pass
 
 #Create the joblog directory if not specified
-if not os.path.exists(opts.joblog_dir[0]):
-    os.makedirs(opts.joblog_dir[0])
+if not os.path.exists(opts.joblog_dir):
+    os.makedirs(opts.joblog_dir)
 else:
     pass
 #==============================================================================
 #Options for GNU parallel
-parallel_optdict = {'--jobs':opts.jobs[0], '--bar':''}
+parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 
 #Get the file basename to name output files
 fasta_basename = get_basename(opts.fasta_file)
