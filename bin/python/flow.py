@@ -55,7 +55,7 @@ def gff_to_pddf(gff, ftype=''):
             return gff_df
 #------------------------------------------------------------------------------
 def get_basename(file_path):
-    basename = os.path.basename(opts.fasta_file)
+    basename = os.path.basename(file_path)
     #Remove two extensions, e.g. foo.tar.gz becomes foo
     if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
         basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
