@@ -16,7 +16,7 @@ genomeTable=$1 #file from NCBI containing FTP path(s)
 dbDir=$2 #output directory
 nJob=$3 #number of simultaneous parallel jobs
 joblog=$4 #joblog from gnu parallel
-sleeptime=${5:-0s} #sleep time
+sleeptime=${5:-0s} #sleep time between jobs
 
 #Script is currently set for Genbank genomes
 #==============================================================================

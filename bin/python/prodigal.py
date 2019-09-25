@@ -7,8 +7,8 @@ Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
 
 Thirteen... that's a mighty unlucky number... for somebody!
 """
-import gzip
-
+from shell_tools import *
+#------------------------------------------------------------------------------
 def prodigal_mode_select(fasta, version=2):
     """
     Select the correct Prodigal mode based on sequence lengths.
