@@ -89,6 +89,8 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
     Get Prodigal genes within a certain distance from a genomic feature.
     The gff_df must only contain 'anchor' genomic features, i.e. CRISPR array.
     gene_seq_dict is a SeqIO Sequence Dict.
+
+    NOTE: NEED TO CHANGE CODE TO USE GFF FILES FOR COORDINATES
     """
     with open(out_fasta, 'w') as fa:
         neighbor_genes = []
@@ -207,7 +209,7 @@ else:
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
 ###---Prodigal---###
-if not opts.prodigal_aa:
+if not opts.prodigal_amino:
     #Generate and run the Prodigal command
     prodigal_command = prodigal_command_generate(fasta=opts.fasta_file, outdir=output_paths['Prodigal'], prefix=fasta_basename)
 
@@ -216,7 +218,7 @@ if not opts.prodigal_aa:
     prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
 
 else:
-    prodigal_faa_dict = make_seqdict(opts.prodigal_aa, prodigal=True)
+    prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
 #==============================================================================
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], fasta_basename + '_CRISPR-neighbor-genes.faa')
