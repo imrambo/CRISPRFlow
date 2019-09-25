@@ -104,10 +104,14 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
         neighbor_genes = []
         #Loop through records and fetch neighboring genes
         if prodigal:
-            for index, row in gff_anchor.iterrows():
+            #for index, row in gff_anchor.iterrows():
+            for i in gff_anchor.index:
+                start = gff_anchor[i, 'start']
+                end = gff_anchor[i, 'end']
                 #if gff_gene:
                 #seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if row[anchor_col] + '_' in key and int(gene_seq_dict[key].description.split('#')[1] >= row['start']) - winsize  and int(gene_seq_dict[key].description.split('#')[2]) <= row['end'] + winsize]
-                seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if index + '_' in key and int(gene_seq_dict[key].description.split('#')[1] >= row['start']) - winsize  and int(gene_seq_dict[key].description.split('#')[2]) <= row['end'] + winsize]
+                #seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if index + '_' in key and int(gene_seq_dict[key].description.split('#')[1] >= row['start']) - winsize  and int(gene_seq_dict[key].description.split('#')[2]) <= row['end'] + winsize]
+                seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if index + '_' in key and int(gene_seq_dict[key].description.split('#')[1] >= int(start)) - winsize  and int(gene_seq_dict[key].description.split('#')[2]) <= int(end) + winsize]
 
                 neighbor_genes.extend(seq_objs)
             SeqIO.write(neighbor_genes, fa, 'fasta')
