@@ -63,8 +63,8 @@ def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
     seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
     if prodigal:
         for key in seq_dict.keys():
-            seq_dict[key]['gene_start'] = int(seq_dict[key]['description'].split(' # ')[1])
-            seq_dict[key]['gene_stop'] = int(seq_dict[key]['description'].split(' # ')[2])
+            seq_dict[key]['gene_start'] = int(seq_dict[key].description.split('#')[1])
+            seq_dict[key]['gene_stop'] = int(seq_dict[key].description.split('#')[2])
         return seq_dict
     else:
         return seq_dict
