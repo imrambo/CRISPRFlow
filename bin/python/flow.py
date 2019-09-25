@@ -17,8 +17,8 @@ import magic
 import gzip
 import re
 import datetime
-import hmmbo
-import prodigal
+from hmmbo import *
+from prodigal import *
 
 # FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 # logging.basicConfig(format=FORMAT)
