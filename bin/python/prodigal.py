@@ -13,7 +13,7 @@ def prodigal_mode_select(fasta, version=2):
     """
     Select the correct Prodigal mode based on sequence lengths.
     """
-    pgz = is_gzip(fasta)
+    pgz = is_gzipped(fasta)
     seq_dict = make_seqdict(fasta=fasta, gz=pgz)
 
     if any([len(seq_dict[key]['sequence']) < 20000 for key in seq_dict.keys()]):
