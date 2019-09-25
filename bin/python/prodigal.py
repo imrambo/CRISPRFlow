@@ -92,7 +92,7 @@ def prodigal_command_generate(ntfasta, optdict, outfmt='gff', version=2, prodiga
     #
     # return prodigal_command,optdict
 #------------------------------------------------------------------------------
-def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, anchor_col='source', prodigal=True):
+def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, prodigal=True):
     """
     Get Prodigal genes within a certain distance from a genomic feature.
     The gff_df must only contain 'anchor' genomic features, i.e. CRISPR array.

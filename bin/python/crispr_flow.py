@@ -36,7 +36,7 @@ def gff_to_pddf(gff, ftype=''):
         gff_df = pd.read_csv(crispr_gff, sep='\s+', names=gff_cols, comment='#')
 
         if ftype:
-            gff_df[gff_df['ftype'] == ftype]
+            gff_df = gff_df[gff_df['ftype'] == ftype]
             return gff_df
         else:
             return gff_df
