@@ -233,12 +233,19 @@ else:
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
 # ###---Prodigal---###
-prodigal_opts = {'-p':prodigal_mode[0], '-o':prodigal_out,
+prodigal_out = os.path.join(outdir, prefix + '_prodigal.gff')
+prodigal_aa = os.path.join(outdir, prefix + '_prodigal.faa')
+prodigal_nt = os.path.join(outdir, prefix + '_prodigal.fna')
+
+prodigal_opts = {'-o':prodigal_out,
 '-a':prodigal_aa, '-d':prodigal_nt, '-f':outfmt}
+
 if not opts.prodigal_amino:
     #Generate and run the Prodigal command
     prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, outdir=output_paths['Prodigal'],
     optdict=prodigal_opts, prefix=nt_fasta_basename)
+
+    print('Prodigal will be run in %s mode')
 
     subprocess.run(prodigal_command[0], shell=False)
 

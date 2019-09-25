@@ -38,15 +38,18 @@ def prodigal_command_generate(ntfasta, outdir, optdict, prefix, outfmt='gff', ve
     Generate an argument list to run Prodigal using subprocess.run()
     """
     #HOW CAN I EXTRACT THE OUTPUT OF prodigal -v ???
-    prodigal_mode = prodigal_mode_select(ntfasta, version=version)
+    #GUNZIP PIPE
 
-    prodigal_out = os.path.join(outdir, prefix + '_prodigal.gff')
-    prodigal_aa = os.path.join(outdir, prefix + '_prodigal.faa')
-    prodigal_nt = os.path.join(outdir, prefix + '_prodigal.fna')
+    if not optdict['-p']:
+        prodigal_mode = prodigal_mode_select(ntfasta, version=version)
+        optdict['-p'] = prodigal_mode[0]
+    else:
+        pass
 
     if not optdict['-i']:
         optdict['-i'] = ntfasta
-        prodigal_command = exec_cmd_generate(prodigal, optdict)
+
+    prodigal_command = exec_cmd_generate(prodigal, optdict)
 
     return prodigal_command,optdict
 
