@@ -33,9 +33,9 @@ def prodigal_mode_select(fasta, version=2):
     return mode,pgz
 
 #------------------------------------------------------------------------------
-def prodigal_command_generate(ntfasta, outdir, prefix, outfmt='gff', version=2):
+def prodigal_command_generate(ntfasta, outdir, optdict, prefix, outfmt='gff', version=2, prodigal='prodigal'):
     """
-    Generate a command string to run Prodigal on a fasta file.
+    Generate an argument list to run Prodigal using subprocess.run()
     """
     #HOW CAN I EXTRACT THE OUTPUT OF prodigal -v ???
     prodigal_mode = prodigal_mode_select(ntfasta, version=version)
@@ -44,20 +44,26 @@ def prodigal_command_generate(ntfasta, outdir, prefix, outfmt='gff', version=2):
     prodigal_aa = os.path.join(outdir, prefix + '_prodigal.faa')
     prodigal_nt = os.path.join(outdir, prefix + '_prodigal.fna')
 
-    prodigal_opts = {'-p':prodigal_mode[0], '-o':prodigal_out,
-    '-a':prodigal_aa, '-d':prodigal_nt, '-f':outfmt}
+    if not optdict['-i']:
+        optdict['-i'] = ntfasta
+        prodigal_command = exec_cmd_generate(prodigal, optdict)
 
-    #Input file is gzipped, use a pipe and omit input option
-    if prodigal_mode[1]:
-        if '-i' in prodigal_opts:
-            del prodigal_opts['-i']
-        prodigal_optstring = optstring_join(prodigal_opts)
-        prodigal_command = 'zcat %s | prodigal %s' % (ntfasta, prodigal_optstring)
+    return prodigal_command,optdict
 
-    else:
-        if not prodigal_opts['-i']:
-            prodigal_opts['-i'] = ntfasta
-        prodigal_optstring = optstring_join(prodigal_opts)
-        prodigal_command = 'prodigal %s' % (ntfasta, prodigal_optstring)
-
-    return prodigal_command,prodigal_opts
+    # #Input file is gzipped, use a pipe and omit input option
+    # if prodigal_mode[1]:
+    #     if '-i' in optdict:
+    #         del optdict['-i']
+    #     zcat = subprocess.run(['zcat', ntfasta], stdout=subprocess.PIPE)
+    #
+    #     #optdicttring = optstring_join(optdict)
+    #     #prodigal_command = 'zcat %s | prodigal %s' % (ntfasta, optdicttring)
+    #     else:
+    #         pass
+    #
+    # else:
+    #     if not optdict['-i']:
+    #         optdict['-i'] = ntfasta
+    #     prodigal_command = exec_cmd_generate(prodigal, optdict)
+    #
+    # return prodigal_command,optdict

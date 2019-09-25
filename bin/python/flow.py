@@ -217,8 +217,6 @@ crispr_detect_opts = {'-f':nt_fasta,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
  '-logfile':crispr_detect_log}
 
-#crispr_detect_optstring = optstring_join(crispr_detect_opts)
-
 ###---Run CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
@@ -235,16 +233,19 @@ else:
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
 # ###---Prodigal---###
-# if not opts.prodigal_amino:
-#     #Generate and run the Prodigal command
-#     prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, outdir=output_paths['Prodigal'], prefix=nt_fasta_basename)
-#
-#     subprocess.run([prodigal_command[0]])
-#
-#     prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
-#
-# else:
-#     prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
+prodigal_opts = {'-p':prodigal_mode[0], '-o':prodigal_out,
+'-a':prodigal_aa, '-d':prodigal_nt, '-f':outfmt}
+if not opts.prodigal_amino:
+    #Generate and run the Prodigal command
+    prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, outdir=output_paths['Prodigal'],
+    optdict=prodigal_opts, prefix=nt_fasta_basename)
+
+    subprocess.run(prodigal_command[0], shell=False)
+
+    prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
+
+else:
+    prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
 # #==============================================================================
 # #Fetch the CRISPR-neighboring genes
 # neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
