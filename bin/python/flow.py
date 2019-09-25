@@ -30,6 +30,16 @@ def optstring_join(optdict):
     """
     optstring = ' '.join([str(param) + ' ' + str(val) for param, val in optdict.items()])
     return optstring
+
+def optlist_generate(optdict):
+    """
+    Create an argument list from a dictonary to use with subprocess.run()
+    """
+    optlist = []
+    for param, val in optdict.items():
+        optlist.append(str(param))
+        optlist.append(str(val))
+    return optlist
 #------------------------------------------------------------------------------
 def gff_to_pddf(gff, ftype=''):
     """Read in a GFF file as a Pandas data frame. Specify ftype to select
@@ -195,62 +205,65 @@ crispr_detect_opts = {'-f':opts.fasta_file,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
  '-logfile':crispr_detect_log}
 
-crispr_detect_optstring = optstring_join(crispr_detect_opts)
+#crispr_detect_optstring = optstring_join(crispr_detect_opts)
+crispr_detect_optlist = optlist_generate(crispr_detect_opts)
 
 ###---Run CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
-    crispr_detect_command = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl %s' % crispr_detect_optstring)
-    subprocess.run(['perl', crispr_detect_command])
+    crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
+    #subprocess.run([crispr_detect_exec, crispr_detect_optstring], shell=False)
+    subprocess.run([crispr_detect_exec, crispr_detect_optlist], shell=False)
+
     crispr_gff = crispr_detect_out + '.gff'
 else:
     crispr_gff = opts.crispr_gff
 #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
-###---Prodigal---###
-if not opts.prodigal_amino:
-    #Generate and run the Prodigal command
-    prodigal_command = prodigal_command_generate(fasta=opts.fasta_file, outdir=output_paths['Prodigal'], prefix=fasta_basename)
-
-    subprocess.run([prodigal_command[0]])
-
-    prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
-
-else:
-    prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
-#==============================================================================
-#Fetch the CRISPR-neighboring genes
-neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], fasta_basename + '_CRISPR-neighbor-genes.faa')
-#neighbor_nt_fasta = os.path.join(prodigal_outdir, fasta_basename + '_CRISPR-neighbor-genes.fna')
-fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent)
-#==============================================================================
-#Subtype the groups of CRISPR-neighboring genes
-macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
-'--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
-'--def':'%s/data/definitions/%s' % (build_root, opts.ccs_typing), '--out-dir':output_paths['MacSyFinder'],
-'--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-'--profile-suffix':'hmm', '--profile-dir':'%s/data/profiles/CAS' % build_root,
-'--worker':opts.threads, '-vv':''}
-
-if opts.joblog_dir:
-    macsyfinder_opts['--log'] = opts.joblog_dir
-else:
-    macsyfinder_opts['--log'] = output_paths['MacSyFinder']
-
-macsyfinder_command = 'macsyfinder %s %s' % (optstring_join(macsyfinder_opts), 'all')
-print(macsyfinder_command)
-#subprocess.run([macsyfinder_command])
-#==============================================================================
-##---HMMSEARCH---###
-hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42, '--cpu':1}
-
-seqdb = neighbor_aa_fasta
-
-#Generate the command strings
-if ',' in opts.database:
-    database_list = ','.split(opts.database)
-    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=database_list, hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
-
-else:
-    hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
+# ###---Prodigal---###
+# if not opts.prodigal_amino:
+#     #Generate and run the Prodigal command
+#     prodigal_command = prodigal_command_generate(ntfasta=opts.fasta_file, outdir=output_paths['Prodigal'], prefix=fasta_basename)
+#
+#     subprocess.run([prodigal_command[0]])
+#
+#     prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
+#
+# else:
+#     prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
+# #==============================================================================
+# #Fetch the CRISPR-neighboring genes
+# neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], fasta_basename + '_CRISPR-neighbor-genes.faa')
+# #neighbor_nt_fasta = os.path.join(prodigal_outdir, fasta_basename + '_CRISPR-neighbor-genes.fna')
+# fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent)
+# #==============================================================================
+# #Subtype the groups of CRISPR-neighboring genes
+# macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
+# '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
+# '--def':'%s/data/definitions/%s' % (build_root, opts.ccs_typing), '--out-dir':output_paths['MacSyFinder'],
+# '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
+# '--profile-suffix':'hmm', '--profile-dir':'%s/data/profiles/CAS' % build_root,
+# '--worker':opts.threads, '-vv':''}
+#
+# if opts.joblog_dir:
+#     macsyfinder_opts['--log'] = opts.joblog_dir
+# else:
+#     macsyfinder_opts['--log'] = output_paths['MacSyFinder']
+#
+# macsyfinder_command = 'macsyfinder %s %s' % (optstring_join(macsyfinder_opts), 'all')
+# print(macsyfinder_command)
+# #subprocess.run([macsyfinder_command])
+# #==============================================================================
+# ##---HMMSEARCH---###
+# hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42, '--cpu':1}
+#
+# seqdb = neighbor_aa_fasta
+#
+# #Generate the command strings
+# if ',' in opts.database:
+#     database_list = ','.split(opts.database)
+#     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=database_list, hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
+#
+# else:
+#     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
