@@ -195,20 +195,24 @@ else:
 #Options for GNU parallel
 parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 
+nt_fasta = opts.fasta_file
 #Get the file basename to name output files
-fasta_basename = get_basename(opts.fasta_file)
+nt_fasta_basename = get_basename(nt_fasta)
 
-if is_gzipped(opts.fasta_file):
-    print('%s is gzip compressed, gunzip file...' % opts.fasta_file)
-    subprocess.run(['gunzip', opts.fasta_file], shell=False)
+#If the nucleotide fasta input is gzipped, gunzip it
+if is_gzipped(nt_fasta):
+    print('%s is gzip compressed, gunzip file...' % nt_fasta)
+    subprocess.run(['gunzip', nt_fasta], shell=False
+    nt_fasta = os.path.splitext(opts.fasta_file)[0]
+
 else:
     pass
 #==============================================================================
 ###---CRISPRDetect---###
-crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect')
-crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect.log')
+crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
+crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 #CRISPRDetect options
-crispr_detect_opts = {'-f':opts.fasta_file,
+crispr_detect_opts = {'-f':nt_fasta,
 '-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':20,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
  '-logfile':crispr_detect_log}
@@ -233,7 +237,7 @@ crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 # ###---Prodigal---###
 # if not opts.prodigal_amino:
 #     #Generate and run the Prodigal command
-#     prodigal_command = prodigal_command_generate(ntfasta=opts.fasta_file, outdir=output_paths['Prodigal'], prefix=fasta_basename)
+#     prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, outdir=output_paths['Prodigal'], prefix=nt_fasta_basename)
 #
 #     subprocess.run([prodigal_command[0]])
 #
@@ -243,8 +247,8 @@ crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #     prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
 # #==============================================================================
 # #Fetch the CRISPR-neighboring genes
-# neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], fasta_basename + '_CRISPR-neighbor-genes.faa')
-# #neighbor_nt_fasta = os.path.join(prodigal_outdir, fasta_basename + '_CRISPR-neighbor-genes.fna')
+# neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
+# #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
 # fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent)
 # #==============================================================================
 # #Subtype the groups of CRISPR-neighboring genes
