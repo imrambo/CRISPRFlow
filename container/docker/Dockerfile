@@ -45,7 +45,9 @@ RUN cd /build && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
     && cd CRISPRDetect_2.4 \
     && unzip CRISPRDetect_2.4.zip \
     && rm CRISPRDetect_2.4.zip \
-    && cpan Parallel::ForkManager
+    && cpan Parallel::ForkManager \
+    && cd CRISPRDetect_2.4 \
+    && chmod -R 755 . && chmod 777 tmp
 
 ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
 
@@ -61,6 +63,7 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
 
 RUN cd /build && git clone -b play_notebook --single-branch https://github.com/imrambo/CRISPRFlow.git
 
+###---Databases---###
 RUN mkdir /build/database/TIGRFAM && cd /build/database/TIGRFAM \
     && wget ftp://ftp.jcvi.org/pub/data/TIGRFAMs/TIGRFAMs_15.0_HMM.tar.gz \
     && tar -zxf TIGRFAMs_15.0_HMM.tar.gz \
@@ -70,3 +73,6 @@ RUN mkdir /build/database/ANTIFAM && cd /build/database/ANTIFAM \
     && wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/AntiFam/current/Antifam.tar.gz \
     && tar -zxf Antifam.tar.gz \
     && rm Antifam.tar.gz
+
+RUN mkdir /build/database/PFAM-A && cd /build/database/PFAM-A \
+    && wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz
