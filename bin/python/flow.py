@@ -171,7 +171,8 @@ parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store',
 help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
 parser.add_argument('--profile_suffix', type=str, dest='profile_suffix', action='store', default='.hmm',
 help='suffix for HMM gene profiles. Default is ".hmm"')
-
+parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='?',
+help='optional prefix for output files. Uses the input nt fasta basename if not supplied.')
 opts = parser.parse_args()
 
 if opts.jobs < 1:
@@ -198,6 +199,10 @@ parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 nt_fasta = opts.fasta_file
 #Get the file basename to name output files
 nt_fasta_basename = get_basename(nt_fasta)
+
+prefix = opts.prefix
+if not prefix:
+    prefix = nt_fasta_basename
 
 #If the nucleotide fasta input is gzipped, gunzip it
 if is_gzipped(nt_fasta):
@@ -244,7 +249,7 @@ prodigal_opts = {'-o':prodigal_out,
 if not opts.prodigal_amino:
     #Generate and run the Prodigal command
     prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
-    prefix=nt_fasta_basename, outfmt=prodigal_outfmt)
+    outfmt=prodigal_outfmt, prodigal='prodigal')
 
     print('Prodigal will be run in %s mode')
 
