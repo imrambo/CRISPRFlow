@@ -50,9 +50,9 @@ def get_basename(file_path):
         basename = os.path.splitext(basename)[0]
     return basename
 #------------------------------------------------------------------------------
-def make_seqdict(fasta, prodigal=False, gz=False):
+def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
     """
-    Create a SeqIO sequence dictionary from a fasta file. If prodigal is True,
+    Create a SeqIO sequence dictionary. If prodigal is True,
     add gene start and stop coordinates to the dictionary.
     """
     if gz:
@@ -60,7 +60,7 @@ def make_seqdict(fasta, prodigal=False, gz=False):
     else:
         seq_handle = open(fasta, 'r')
 
-    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle), 'fasta')
+    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle), format = format)
     if prodigal:
         for key in seq_dict.keys():
             seq_dict[key]['gene_start'] = int(seq_dict[key]['description'].split(' # ')[1])
