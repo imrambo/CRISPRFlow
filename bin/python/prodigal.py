@@ -104,6 +104,7 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
         neighbor_genes = []
         #Loop through records and fetch neighboring genes
         if prodigal:
+            print(gff_anchor.head())
             #for index, row in gff_anchor.iterrows():
             for i in gff_anchor.index:
                 start = gff_anchor[i, 'start']
