@@ -40,18 +40,18 @@ def prodigal_command_generate(ntfasta, optdict, outfmt='gff', version=2, prodiga
     #HOW CAN I EXTRACT THE OUTPUT OF prodigal -v ???
     #GUNZIP PIPE
 
-    if not optdict['-p']:
+    if not '-p' in optdict.keys():
         prodigal_mode = prodigal_mode_select(ntfasta, version=version)
         optdict['-p'] = prodigal_mode[0]
     else:
         pass
 
-    if not optdict['-i']:
+    if not '-i' in optdict.keys():
         optdict['-i'] = ntfasta
     else:
         pass
 
-    if not optdict['-f']:
+    if not '-f' in optdict.keys():
         optdict['f'] = outfmt
     else:
         pass
