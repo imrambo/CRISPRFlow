@@ -202,7 +202,7 @@ nt_fasta_basename = get_basename(nt_fasta)
 #If the nucleotide fasta input is gzipped, gunzip it
 if is_gzipped(nt_fasta):
     print('%s is gzip compressed, gunzip file...' % nt_fasta)
-    subprocess.run(['gunzip', nt_fasta], shell=False
+    subprocess.run(['gunzip', nt_fasta], shell=False)
     nt_fasta = os.path.splitext(opts.fasta_file)[0]
 
 else:
