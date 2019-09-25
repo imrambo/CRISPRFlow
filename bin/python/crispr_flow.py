@@ -60,7 +60,7 @@ def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
     else:
         seq_handle = open(fasta, 'r')
 
-    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle), format = format)
+    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format = format))
     if prodigal:
         for key in seq_dict.keys():
             seq_dict[key]['gene_start'] = int(seq_dict[key]['description'].split(' # ')[1])
