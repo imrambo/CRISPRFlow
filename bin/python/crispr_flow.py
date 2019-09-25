@@ -60,7 +60,7 @@ def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
     else:
         seq_handle = open(fasta, 'r')
 
-    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format = format))
+    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
     if prodigal:
         for key in seq_dict.keys():
             seq_dict[key]['gene_start'] = int(seq_dict[key]['description'].split(' # ')[1])
@@ -190,8 +190,7 @@ prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % 
 prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
 
-prodigal_opts = {'-o':prodigal_out,
-'-a':prodigal_aa, '-d':prodigal_nt}
+prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt}
 
 if not opts.prodigal_amino:
     #Generate and run the Prodigal command
