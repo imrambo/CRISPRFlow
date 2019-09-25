@@ -65,7 +65,7 @@ def prodigal_command_generate(ntfasta, optdict, outfmt='gff', version=2, prodiga
         pass
 
     if not '-f' in optdict.keys():
-        optdict['f'] = outfmt
+        optdict['-f'] = outfmt
     else:
         pass
 
