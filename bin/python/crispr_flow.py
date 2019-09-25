@@ -6,7 +6,7 @@ Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
 
 Thirteen... that's a mighty unlucky number... for somebody!
 """
-version = 0.0.1
+version = 'v0.0.1'
 
 from Bio import SeqIO
 import argparse
