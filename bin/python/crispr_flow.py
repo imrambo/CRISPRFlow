@@ -198,8 +198,8 @@ if not opts.prodigal_amino:
     prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
     outfmt=prodigal_outfmt, prodigal='prodigal')
 
-    print('Prodigal will be run in %s mode')
-
+    print('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
+    print(prodigal_command[0])
     subprocess.run(prodigal_command[0], shell=False)
 
     prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
