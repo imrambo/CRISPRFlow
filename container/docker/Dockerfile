@@ -46,7 +46,7 @@ RUN cd /build && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
     && unzip CRISPRDetect_2.4.zip \
     && rm CRISPRDetect_2.4.zip \
     && cpan Parallel::ForkManager
-#ENV PATH="/build/CRISPRDetect_2.4/CRISPRDetect_2.4:${PATH}"
+
 ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
 
 #MacSyFinder

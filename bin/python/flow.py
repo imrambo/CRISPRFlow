@@ -108,64 +108,32 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
             neighbor_genes.extend(seq_objs)
         SeqIO.write(neighbor_genes, fa, 'fasta')
 #------------------------------------------------------------------------------
-# def command_generator(seqdb, profile, prefix=None, optstring, parallel=False, progbar=False, program='hmmsearch', psuffix='.hmm', outdir='/tmp', jobs=1, joblog='joblog'):
-#     """
-#     Generate a list of bash command strings.
-#     Use parallel=True to run parallel jobs using GNU parallel.
-#     Pass an ordered dictionary if parameter order matters.
-#     """
-#     #  BREAK THIS UP INTO FUNCTIONS
-#     # if not prefix:
-#     #     prefix = get_basename(seqdb)
-#
-#     commands = []
-#
-#     if parallel and jobs == 1:
-#         parallel = False
-#     if not parallel:
-#         if os.path.isdir(profile):
-#             profile_glob = os.path.join(profile, '*%s' % psuffix)
-#             for i in list(glob.glob(profile_glob, recursive = False)):
-#                 cmd = '%s %s %s %s' % (program, optstring, i, seqdb)
-#                 commands.append(cmd)
-#
-#         elif os.path.isfile(profile):
-#             #Run program for a single profile
-#             #optstring = optstring_join(optdict)
-#             cmd = '%s %s' % (program, optstring)
-#             commands.append(cmd)
-#         else:
-#             pass
-#     elif parallel and jobs > 1:
-#         #Build the parallel string
-#         parallel_optdict = {'--jobs':jobs}
-#         if progbar:
-#             parallel_optdict['--bar'] = ''
-#         parallel_optdict['--joblog'] = joblog
-#         parallel_optstring = opstring_join(parallel_optdict)
-#
-#         #optstring = optstring_join(optdict)
-#         if os.path.isdir(profile):
-#             cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (profile, psuffix, parallel_optstring, program, optstring, seqdb)
-#             commands.append(cmd)
-#         """
-#         If a list of paths is provided, break it up into files and directories
-#         and generate strings.
-#         """
-#         if isinstance(profile, list):
-#             pfiles = [os.path.isfile(p) for p in profile]
-#             pdirs = [os.path.isdir(p) for p in profile]
-#             if len(pfiles) + len(pdirs) == len(profile):
-#                     if pdirs:
-#                         for pdir in pdirs:
-#                             cmd = 'find %s -type f -name "*%s" | parallel %s %s %s {} %s' % (pdir, psuffix, parallel_optstring, program, optstring, seqdb)
-#                             commands.append(cmd)
-#                     if pfiles and len(pfiles) > 1:
-#                         cmd = 'parallel %s %s %s {} %s ::: %s' % (parallel_optstring, program, optstring, seqdb, ' '.join(pfiles))
-#                         commands.append(cmd)
-#     else:
-#         pass
-#     return commands
+def joblog_test(joblog):
+    """
+    Parse GNU Parallel joblog to recover commands with non-zero exit codes.
+    Returns a two list of tuples containing the command and exit code
+    (zero and non-zero exit codes).
+    """
+    nonzero=[]
+    zero=[]
+    if os.path.exists(joblog) and os.path.getsize(joblog) > 0:
+        with open(joblog, 'r') as jl:
+            next(jl)
+            for record in jl:
+                record_list = record.split()
+                command = record_list[-1]
+                exit_code = record_list[6]
+                if exitCode != 0:
+                    nonzero.append((command, exit_code))
+                else:
+                    zero.append([command, exit_code])
+    if nonzero:
+        warning_message = '%d of %d commands returned a non-zero exit code' % (len(nonzero), len(nonzero)+len(zero))
+        logging.warning(warning_message)
+        for c,e in nonzero:
+            warning_message = 'Command: "%s" returned a non-zero exit code of: %s' % (c, e)
+            logging.warning(warning_message)
+    return nonzero, zero
 #==============================================================================
 build_root = '../..'
 #==============================================================================
@@ -191,7 +159,7 @@ help='Number of bp extension to include in a cluster. Default = 10kb.')
 parser.add_argument('--joblog_dir', type=str, dest='joblog_dir', action='store',
 nargs = '?', help='Directory for log files.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
-help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4')
+help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4/CRISPRDetect_2.4')
 parser.add_argument('--database', type=str, dest='database', action='store',
 nargs='?', help='Comma-separated list of HMM database paths to use for CRISPR-proximity gene hmmsearch. You can also specify paths to certain profiles, e.g. /path/to/K00001.hmm')
 parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
