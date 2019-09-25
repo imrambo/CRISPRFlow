@@ -197,6 +197,12 @@ parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 
 #Get the file basename to name output files
 fasta_basename = get_basename(opts.fasta_file)
+
+if is_gzipped(opts.fasta_file):
+    print('%s is gzip compressed, gunzip file...' % opts.fasta_file)
+    subprocess.run(['gunzip', opts.fasta_file], shell=False)
+else:
+    pass
 #==============================================================================
 ###---CRISPRDetect---###
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], fasta_basename + '_CRISPRDetect')
