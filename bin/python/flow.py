@@ -198,7 +198,7 @@ crispr_detect_optstring = optstring_join(crispr_detect_opts)
 ###---Run CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
-    crispr_detect_command = os.path.join(opts.CRISPRDetectDir, 'perl CRISPRDetect.pl %s' % crispr_detect_optstring)
+    crispr_detect_command = 'perl %s' % os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl %s' % crispr_detect_optstring)
     subprocess.run([crispr_detect_command])
     crispr_gff = crispr_detect_out + '.gff'
 else:
