@@ -107,8 +107,8 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
             print(gff_anchor.head())
             #for index, row in gff_anchor.iterrows():
             for i in gff_anchor.index:
-                start = gff_anchor.get_value[i, 'start']
-                end = gff_anchor.get_value[i, 'end']
+                start = gff_anchor.get_value(i, 'start')
+                end = gff_anchor.get_value(i, 'end')
 
                 print(start)
                 print(end)
