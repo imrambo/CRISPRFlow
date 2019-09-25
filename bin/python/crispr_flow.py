@@ -61,18 +61,18 @@ def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
         seq_handle = open(fasta, 'r')
 
     seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
-    if prodigal:
-        for key in seq_dict.keys():
-            seq_dict[key].gene_start = int(seq_dict[key].description.split('#')[1])
-            seq_dict[key].gene_stop = int(seq_dict[key].description.split('#')[2])
-            #seq_dict[key]['gene_start'] = int(seq_dict[key].description.split('#')[1])
-            #seq_dict[key]['gene_stop'] = int(seq_dict[key].description.split('#')[2])
-        print(seq_dict)
-        return seq_dict
-    else:
-        return seq_dict
+    # if prodigal:
+    #     for key in seq_dict.keys():
+    #         seq_dict[key].gene_start = int(seq_dict[key].description.split('#')[1])
+    #         seq_dict[key].gene_stop = int(seq_dict[key].description.split('#')[2])
+    #         #seq_dict[key]['gene_start'] = int(seq_dict[key].description.split('#')[1])
+    #         #seq_dict[key]['gene_stop'] = int(seq_dict[key].description.split('#')[2])
+    #     print(seq_dict)
+    #     return seq_dict
+    # else:
+    return seq_dict
 #------------------------------------------------------------------------------
-def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, anchor_col='source'):
+def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, anchor_col='source', prodigal=True):
     """
     Get Prodigal genes within a certain distance from a genomic feature.
     The gff_df must only contain 'anchor' genomic features, i.e. CRISPR array.
@@ -83,11 +83,14 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
     with open(out_fasta, 'w') as fa:
         neighbor_genes = []
         #Loop through records and fetch neighboring genes
-        for index, row in gff_anchor.iterrows():
-            #if gff_gene:
-            seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if row[anchor_col] + '_' in key and gene_seq_dict[key]['gene_start'] >= row['start'] - winsize  and gene_seq_dict[key]['gene_stop'] <= row['end'] + winsize]
-            neighbor_genes.extend(seq_objs)
-        SeqIO.write(neighbor_genes, fa, 'fasta')
+        if prodigal:
+            for index, row in gff_anchor.iterrows():
+                #if gff_gene:
+                seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if row[anchor_col] + '_' in key and int(gene_seq_dict[key].description.split('#')[1] >= row['start']) - winsize  and int(gene_seq_dict[key].description.split('#')[2]) <= row['end'] + winsize]
+                neighbor_genes.extend(seq_objs)
+            SeqIO.write(neighbor_genes, fa, 'fasta')
+        else:
+            pass
 
 #==============================================================================
 build_root = '../..'
