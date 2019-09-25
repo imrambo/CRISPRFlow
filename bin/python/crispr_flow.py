@@ -71,27 +71,6 @@ def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
     #     return seq_dict
     # else:
     return seq_dict
-#------------------------------------------------------------------------------
-def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, anchor_col='source', prodigal=True):
-    """
-    Get Prodigal genes within a certain distance from a genomic feature.
-    The gff_df must only contain 'anchor' genomic features, i.e. CRISPR array.
-    gene_seq_dict is a SeqIO Sequence Dict.
-
-    NOTE: NEED TO CHANGE CODE TO USE GFF FILES FOR COORDINATES
-    """
-    with open(out_fasta, 'w') as fa:
-        neighbor_genes = []
-        #Loop through records and fetch neighboring genes
-        if prodigal:
-            for index, row in gff_anchor.iterrows():
-                #if gff_gene:
-                seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() if row[anchor_col] + '_' in key and int(gene_seq_dict[key].description.split('#')[1] >= row['start']) - winsize  and int(gene_seq_dict[key].description.split('#')[2]) <= row['end'] + winsize]
-                neighbor_genes.extend(seq_objs)
-            SeqIO.write(neighbor_genes, fa, 'fasta')
-        else:
-            pass
-
 #==============================================================================
 build_root = '../..'
 #==============================================================================
@@ -215,8 +194,8 @@ else:
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-fetch_gene_clusters(gff_df=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent)
-# #==============================================================================
+fetch_gene_clusters(gff_anchor=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent, anchor_col='source', prodigal=True)
+#==============================================================================
 # #Subtype the groups of CRISPR-neighboring genes
 # macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
 # '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
