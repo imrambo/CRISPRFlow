@@ -30,15 +30,17 @@ def optstring_join(optdict):
     """
     optstring = ' '.join([str(param) + ' ' + str(val) for param, val in optdict.items()])
     return optstring
-
-def optlist_generate(optdict):
+#------------------------------------------------------------------------------
+def exec_cmd_generate(exec_path, optdict):
     """
     Create an argument list from a dictonary to use with subprocess.run()
+    For use when running an executable with shell=False
     """
     optlist = []
     for param, val in optdict.items():
         optlist.append(str(param))
         optlist.append(str(val))
+    optlist.insert(0, exec_path)
     return optlist
 #------------------------------------------------------------------------------
 def gff_to_pddf(gff, ftype=''):
@@ -206,14 +208,15 @@ crispr_detect_opts = {'-f':opts.fasta_file,
  '-logfile':crispr_detect_log}
 
 #crispr_detect_optstring = optstring_join(crispr_detect_opts)
-crispr_detect_optlist = optlist_generate(crispr_detect_opts)
 
 ###---Run CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
     crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
+
+    crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_opts)
     #subprocess.run([crispr_detect_exec, crispr_detect_optstring], shell=False)
-    subprocess.run([crispr_detect_exec, crispr_detect_optlist], shell=False)
+    subprocess.run(crispr_detect_optlist, shell=False)
 
     crispr_gff = crispr_detect_out + '.gff'
 else:
