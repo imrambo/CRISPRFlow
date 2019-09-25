@@ -9,14 +9,27 @@ Thirteen... that's a mighty unlucky number... for somebody!
 """
 from shell_tools import *
 #------------------------------------------------------------------------------
-def prodigal_mode_select(fasta, version=2):
+def prodigal_mode_select(fasta, version=2, len_thresh=20000):
     """
-    Select the correct Prodigal mode based on sequence lengths.
+    Select the correct Prodigal mode based on input nt fasta sequence lengths.
     """
     pgz = is_gzipped(fasta)
-    seq_dict = make_seqdict(fasta=fasta, gz=pgz)
+    #seq_dict = make_seqdict(fasta=fasta, gz=pgz)
 
-    if any([len(seq_dict[key]['sequence']) < 20000 for key in seq_dict.keys()]):
+    if pgz:
+        with gzip.open(fasta, 'rb') as fa:
+            lines = fa.readlines()
+            lines = [lines.decode('ascii') for line in lines]
+    else:
+        with open(fasta, 'r') as fa:
+            lines = fa.readlines()
+
+    #Are there any sequences less than the threshold for 'single/normal' mode?
+    #if any([len(seq_dict[key]['sequence']) < len_thresh for key in seq_dict.keys()]):
+    #if any([len(line) < len_thresh for line in lines if not line.startswith('>')]):
+
+    #Is the total genome length less than the size threshold for 'single/normal' mode?
+    if sum([len(line) for line in lines if not line.startswith('>')]) < len_thresh:
         if version == 2:
             mode = 'meta'
         elif version == 3:

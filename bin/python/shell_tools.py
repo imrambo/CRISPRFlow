@@ -1,3 +1,13 @@
+#!/usr/bin/python3
+
+"""
+Motivation: functions for command-line arguments.
+
+Author: Ian Rambo
+
+Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
+"""
+
 import magic
 import gzip
 import os
