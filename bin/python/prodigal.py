@@ -33,7 +33,7 @@ def prodigal_mode_select(fasta, version=2):
     return mode,pgz
 
 #------------------------------------------------------------------------------
-def prodigal_command_generate(ntfasta, outdir, optdict, prefix, outfmt='gff', version=2, prodigal='prodigal'):
+def prodigal_command_generate(ntfasta, optdict, prefix, outfmt='gff', version=2, prodigal='prodigal'):
     """
     Generate an argument list to run Prodigal using subprocess.run()
     """
@@ -48,6 +48,13 @@ def prodigal_command_generate(ntfasta, outdir, optdict, prefix, outfmt='gff', ve
 
     if not optdict['-i']:
         optdict['-i'] = ntfasta
+    else:
+        pass
+
+    if not optdict['-f']:
+        optdict['f'] = outfmt
+    else:
+        pass
 
     prodigal_command = exec_cmd_generate(prodigal, optdict)
 
