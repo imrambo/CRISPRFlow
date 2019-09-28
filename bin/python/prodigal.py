@@ -27,10 +27,10 @@ def prodigal_mode_select(fasta, version=2, len_thresh=20000):
 
     #Are there any sequences less than the threshold for 'single/normal' mode?
     #if any([len(seq_dict[key]['sequence']) < len_thresh for key in seq_dict.keys()]):
-    #if any([len(line) < len_thresh for line in lines if not line.startswith('>')]):
+    if any([len(line) < len_thresh for line in lines if not line.startswith('>')]):
 
     #Is the total genome length less than the size threshold for 'single/normal' mode?
-    if sum([len(line) for line in lines if not line.startswith('>')]) < len_thresh:
+    #if sum([len(line) for line in lines if not line.startswith('>')]) < len_thresh:
         if version == 2:
             mode = 'meta'
         elif version == 3:
@@ -92,7 +92,21 @@ def prodigal_command_generate(ntfasta, optdict, outfmt='gff', version=2, prodiga
     #
     # return prodigal_command,optdict
 #------------------------------------------------------------------------------
-def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=None, prodigal=True):
+def gff_to_pddf(gff, ftype=''):
+    """Read in a GFF file as a Pandas data frame. Specify ftype to select
+    rows pertaining to a specific feature type."""
+    gff_cols = ['source', 'ftype', 'start', 'end', 'score', 'strand',
+    'phase', 'attributes']
+    if os.path.exists(gff) and os.stat(gff).st_size != 0:
+        gff_df = pd.read_csv(crispr_gff, sep='\s+', names=gff_cols, comment='#')
+
+        if ftype:
+            gff_df = gff_df[gff_df['ftype'] == ftype]
+            return gff_df
+        else:
+            return gff_df
+#------------------------------------------------------------------------------
+def fetch_gene_clusters(gff_anchor_df, gene_seq_dict, out_fasta, winsize, gff_gene=None, prodigal=True):
     """
     Get Prodigal genes within a certain distance from a genomic feature.
     The gff_df must only contain 'anchor' genomic features, i.e. CRISPR array.
@@ -100,6 +114,32 @@ def fetch_gene_clusters(gff_anchor, gene_seq_dict, out_fasta, winsize, gff_gene=
 
     NOTE: NEED TO CHANGE CODE TO USE GFF FILES FOR COORDINATES
     """
+    gff_anchor_df['sequence_id'] = gff_anchor_df.index()
+    gff_gene_df['sequence_id'] = gff_anchor_df.index().str.extract(r'^(.*?)_\d+$')
+
+    
+
+    #if all([l in list(gff_gene_df.columns.values) for l in list(gff_anchor_df.columns.values)]) and if len(gff_anchor_df.columns) == len(gff_gene_df.columns):
+    # gff_concat_df = pd.concatenate([gff_anchor_df, gff_gene_df])
+
+
+
+
+
+    df[col].str.extract(r'')
+
+    #for i in gff_anchor_df['sequence_id']:
+
+
+    def fetch_bin(df, col):
+    """
+    Extract bin ID.
+    """
+    df['bin'] = df[col].str.extract(r'(.*?)_scaffold_.*?')
+    df['bin1'] = df[col].str.extract(r'^(.*?\.\d+)_\d+$')
+
+
+
     with open(out_fasta, 'w') as fa:
         neighbor_genes = []
         #Loop through records and fetch neighboring genes

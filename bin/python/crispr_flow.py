@@ -27,19 +27,7 @@ from shell_tools import *
 # logging.basicConfig(format=FORMAT)
 # logging.get_logger()
 #==============================================================================
-def gff_to_pddf(gff, ftype=''):
-    """Read in a GFF file as a Pandas data frame. Specify ftype to select
-    rows pertaining to a specific feature type."""
-    gff_cols = ['source', 'ftype', 'start', 'end', 'score', 'strand',
-    'phase', 'attributes']
-    if os.path.exists(gff) and os.stat(gff).st_size != 0:
-        gff_df = pd.read_csv(crispr_gff, sep='\s+', names=gff_cols, comment='#')
 
-        if ftype:
-            gff_df = gff_df[gff_df['ftype'] == ftype]
-            return gff_df
-        else:
-            return gff_df
 #------------------------------------------------------------------------------
 def get_basename(file_path):
     basename = os.path.basename(file_path)
@@ -177,7 +165,12 @@ prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
 
 prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt}
 
-if not opts.prodigal_amino:
+if opts.prodigal_gff and opts.prodigal_amino:
+    prodigal_gff_df = gff_to_pddf(opts.prodigal_gff)
+    prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
+# elif opts.prodigal_gff and not opts.prodigal_amino or not opts.prodigal_gff and opts.prodigal_amino:
+#     torun = [k for k in [opts.prodigal_gff, opts.prodigal_amino] if not k]
+else:
     #Generate and run the Prodigal command
     prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
     outfmt=prodigal_outfmt, prodigal='prodigal')
@@ -189,7 +182,7 @@ if not opts.prodigal_amino:
     prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
 
 else:
-    prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
+
 # #==============================================================================
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
