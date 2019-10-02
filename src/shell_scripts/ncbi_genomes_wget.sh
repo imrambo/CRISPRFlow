@@ -75,9 +75,9 @@ printf "\n################ Verifying downloaded files using  md5sum ############
 md5sum --quiet -c $md5sum_file > $md5sum_check
 
 if [ -s "$md5sum_check" ]
-then
-    nfail=$(wc -l "$md5sum_check" | cut -f1 -d' ')
-    printf "\n WARNING !! $nfail downloaded files were not OK. Check $md5sum_check for the list of filenames \n"
+    then
+        nfail=$(wc -l "$md5sum_check" | cut -f1 -d' ')
+        printf "\n WARNING !! $nfail downloaded files were not OK. Check $md5sum_check for the list of filenames \n"
 else
     printf "\nDownloaded files verified. All OK ! \n"
 fi

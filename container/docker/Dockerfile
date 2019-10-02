@@ -63,6 +63,13 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
 
 RUN cd /build && git clone -b play_notebook --single-branch https://github.com/imrambo/CRISPRFlow.git
 
+RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
+    && wget http://github.com/bbuchfink/diamond/releases/download/v0.9.26/diamond-linux64.tar.gz \
+    && tar -zxf diamond-linux64.tar.gz \
+    && rm diamond-linux64.tar.gz
+ENV PATH "$PATH:/build/DIAMOND"
+
+
 ###---Databases---###
 #RUN mkdir /build/database/TIGRFAM && cd /build/database/TIGRFAM \
 #    && wget ftp://ftp.jcvi.org/pub/data/TIGRFAMs/TIGRFAMs_15.0_HMM.tar.gz \
@@ -77,3 +84,6 @@ RUN cd /build && git clone -b play_notebook --single-branch https://github.com/i
 #RUN mkdir /build/database/PFAM-A && cd /build/database/PFAM-A \
 #    && wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz \
 #    && gunzip Pfam-A.hmm.gz
+
+#CAZymes
+#http://bcb.unl.edu/dbCAN2/download/Databases/?C=M;O=D
