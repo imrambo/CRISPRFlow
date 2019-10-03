@@ -8,6 +8,9 @@ Thirteen... that's a mighty unlucky number... for somebody!
 """
 #------------------------------------------------------------------------------
 def gff_to_pddf(gff, ftype=''):
+    import numpy as np
+    import pandas as pd
+    import os
     """Read in a GFF file as a Pandas data frame. Specify ftype to select
     rows pertaining to a specific feature type."""
     gff_cols = ['source', 'ftype', 'start', 'end', 'score', 'strand',
