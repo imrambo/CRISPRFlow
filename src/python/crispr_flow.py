@@ -22,7 +22,7 @@ import datetime
 from hmmbo import *
 from prodigal import *
 from shell_tools import *
-from gff3 import gff_to_pddf
+from gff3 import gff3_to_pddf
 
 FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 logging.basicConfig(format=FORMAT)
