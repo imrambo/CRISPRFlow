@@ -22,7 +22,7 @@ import datetime
 from hmmbo import *
 from prodigal import *
 from shell_tools import *
-from gff import gff_to_pddf
+from gff3 import gff_to_pddf
 
 FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -112,8 +112,8 @@ if not os.path.exists(opts.joblog_dir):
 else:
     pass
 
-SConstruct = open('SConstruct', 'w')
-SConstruct.write('env = Environment()\n')
+# SConstruct = open('SConstruct', 'w')
+# SConstruct.write('env = Environment()\n')
 #==============================================================================
 #Options for GNU parallel
 parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
@@ -163,11 +163,11 @@ else:
 
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
-    crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region')
+    crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
 else:
     logging.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
-
+crispr_gff_df = crispr_gff_df.rename(columns={'source':'scaffold'})
 
 # CRISPR_SOURCES = [nt_fasta]
 # CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for filename in filenames for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect'])]
@@ -202,7 +202,7 @@ outfmt=prodigal_outfmt, prodigal='prodigal')
 #print(prodigal_command[0])
 subprocess.run(prodigal_command[0], shell=False)
 
-prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
+#prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
 
 if gzip:
     subprocess.run(['gzip', nt_fasta], shell=False)
@@ -257,4 +257,4 @@ else:
 # else:
 #     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
 
-SConstruct.close()
+#SConstruct.close()
