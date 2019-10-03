@@ -23,6 +23,7 @@ from hmmbo import *
 from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
+from gene_clusters import *
 
 # FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 # logging.basicConfig(format=FORMAT)
@@ -37,27 +38,27 @@ def get_basename(file_path):
         basename = os.path.splitext(basename)[0]
     return basename
 #------------------------------------------------------------------------------
-def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
-    """
-    Create a SeqIO sequence dictionary. If prodigal is True,
-    add gene start and stop coordinates from FASTA header to the dictionary.
-    """
-    if gz:
-        seq_handle = gzip.open(fasta, 'rb')
-    else:
-        seq_handle = open(fasta, 'r')
-
-    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
-    # if prodigal:
-    #     for key in seq_dict.keys():
-    #         seq_dict[key].gene_start = int(seq_dict[key].description.split('#')[1])
-    #         seq_dict[key].gene_stop = int(seq_dict[key].description.split('#')[2])
-    #         #seq_dict[key]['gene_start'] = int(seq_dict[key].description.split('#')[1])
-    #         #seq_dict[key]['gene_stop'] = int(seq_dict[key].description.split('#')[2])
-    #     print(seq_dict)
-    #     return seq_dict
-    # else:
-    return seq_dict
+# def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
+#     """
+#     Create a SeqIO sequence dictionary. If prodigal is True,
+#     add gene start and stop coordinates from FASTA header to the dictionary.
+#     """
+#     if gz:
+#         seq_handle = gzip.open(fasta, 'rb')
+#     else:
+#         seq_handle = open(fasta, 'r')
+#
+#     seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
+#     # if prodigal:
+#     #     for key in seq_dict.keys():
+#     #         seq_dict[key].gene_start = int(seq_dict[key].description.split('#')[1])
+#     #         seq_dict[key].gene_stop = int(seq_dict[key].description.split('#')[2])
+#     #         #seq_dict[key]['gene_start'] = int(seq_dict[key].description.split('#')[1])
+#     #         #seq_dict[key]['gene_stop'] = int(seq_dict[key].description.split('#')[2])
+#     #     print(seq_dict)
+#     #     return seq_dict
+#     # else:
+#     return seq_dict
 #==============================================================================
 build_root = '../..'
 #==============================================================================
@@ -167,8 +168,6 @@ if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0
 else:
     logging.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
-crispr_gff_df = crispr_gff_df.rename(columns={'source':'scaffold'})
-
 # CRISPR_SOURCES = [nt_fasta]
 # CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for filename in filenames for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect'])]
 # CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
@@ -186,28 +185,29 @@ prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
 
 prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt}
 
-#
+#Generate and run the Prodigal command
+prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
+outfmt=prodigal_outfmt, prodigal='prodigal')
+
+print('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
+subprocess.run(prodigal_command[0], shell=False)
+
+if os.path.exists(prodigal_out) and os.stat(prodigal_out).st_size != 0:
+    prodigal_gff_df = gff3_to_pddf(gff = prodigal_out, ftype = 'CDS', index_col=False)
+else:
+    logging.error('GFF3 file %s not valid' % prodigal_out)
+
+if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
+    prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
+else:
+    logging.error('Prodigal amino acid fasta %s not valid' % prodigal_aa)
+
 # if opts.prodigal_gff and opts.prodigal_amino:
 #     prodigal_gff_df = gff_to_pddf(opts.prodigal_gff)
 #     prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
 # # elif opts.prodigal_gff and not opts.prodigal_amino or not opts.prodigal_gff and opts.prodigal_amino:
 # #     torun = [k for k in [opts.prodigal_gff, opts.prodigal_amino] if not k]
 # else:
-
-#Generate and run the Prodigal command
-prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
-outfmt=prodigal_outfmt, prodigal='prodigal')
-
-#print('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
-#print(prodigal_command[0])
-subprocess.run(prodigal_command[0], shell=False)
-
-#prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
-
-if gzip:
-    subprocess.run(['gzip', nt_fasta], shell=False)
-else:
-    pass
 
 # PRODIGAL_SOURCES = [nt_fasta]
 # PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
@@ -221,7 +221,7 @@ else:
 
 # #==============================================================================
 #Fetch the CRISPR-neighboring genes
-#neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
+neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
 #fetch_gene_clusters(gff_anchor=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent, prodigal=True)
 
@@ -258,3 +258,7 @@ else:
 #     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
 
 #SConstruct.close()
+if gzip:
+    subprocess.run(['gzip', nt_fasta], shell=False)
+else:
+    pass
