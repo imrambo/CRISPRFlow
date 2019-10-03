@@ -127,7 +127,9 @@ if not prefix:
     prefix = nt_fasta_basename
 
 #If the nucleotide fasta input is gzipped, gunzip it
+gzip = False
 if is_gzipped(nt_fasta):
+    gzip = True
     print('%s is gzip compressed, gunzip file...' % nt_fasta)
     subprocess.run(['gunzip', nt_fasta], shell=False)
     nt_fasta = os.path.splitext(opts.fasta_file)[0]
@@ -155,6 +157,7 @@ if not opts.crispr_gff:
     subprocess.run(crispr_detect_optlist, shell=False)
 
     crispr_gff = crispr_detect_out + '.gff'
+    print(crispr_gff)
 else:
     crispr_gff = opts.crispr_gff
 
@@ -167,7 +170,7 @@ else:
 # CRISPR_OPTS['-f'] = '$SOURCE'
 # CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
 # SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
-print(crispr_gff)
+
 #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
@@ -196,6 +199,11 @@ outfmt=prodigal_outfmt, prodigal='prodigal')
 subprocess.run(prodigal_command[0], shell=False)
 
 prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
+
+if gzip:
+    subprocess.run(['gzip', nt_fasta], shell=False)
+else:
+    pass
 
 # PRODIGAL_SOURCES = [nt_fasta]
 # PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
