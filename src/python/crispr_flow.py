@@ -24,9 +24,9 @@ from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
 
-FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
-logging.basicConfig(format=FORMAT)
-logging.get_logger()
+# FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+# logging.basicConfig(format=FORMAT)
+# logging.get_logger()
 #==============================================================================
 def get_basename(file_path):
     basename = os.path.basename(file_path)
