@@ -167,7 +167,7 @@ else:
 # CRISPR_OPTS['-f'] = '$SOURCE'
 # CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
 # SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
-
+print(crispr_gff)
 #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
