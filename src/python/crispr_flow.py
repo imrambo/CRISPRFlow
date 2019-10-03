@@ -27,8 +27,6 @@ from shell_tools import *
 # logging.basicConfig(format=FORMAT)
 # logging.get_logger()
 #==============================================================================
-
-#------------------------------------------------------------------------------
 def get_basename(file_path):
     basename = os.path.basename(file_path)
     #Remove two extensions, e.g. foo.tar.gz becomes foo
@@ -112,6 +110,9 @@ if not os.path.exists(opts.joblog_dir):
     os.makedirs(opts.joblog_dir)
 else:
     pass
+
+SConstruct = open('SConstruct', 'w')
+SConstruct.write('env = Environment()\n')
 #==============================================================================
 #Options for GNU parallel
 parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
@@ -132,6 +133,7 @@ if is_gzipped(nt_fasta):
 
 else:
     pass
+
 #==============================================================================
 ###---CRISPRDetect---###
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
@@ -154,6 +156,17 @@ if not opts.crispr_gff:
     crispr_gff = crispr_detect_out + '.gff'
 else:
     crispr_gff = opts.crispr_gff
+
+
+CRISPR_SOURCES = [nt_fasta]
+CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for filename in filenames for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect'])]
+CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
+CRISPR_OPTS = crispr_detect_optlist
+CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
+CRISPR_OPTS['-f'] = '$SOURCE'
+CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
+SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
+
 #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
@@ -165,29 +178,40 @@ prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
 
 prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt}
 
-if opts.prodigal_gff and opts.prodigal_amino:
-    prodigal_gff_df = gff_to_pddf(opts.prodigal_gff)
-    prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
-# elif opts.prodigal_gff and not opts.prodigal_amino or not opts.prodigal_gff and opts.prodigal_amino:
-#     torun = [k for k in [opts.prodigal_gff, opts.prodigal_amino] if not k]
-else:
-    #Generate and run the Prodigal command
-    prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
-    outfmt=prodigal_outfmt, prodigal='prodigal')
+#
+# if opts.prodigal_gff and opts.prodigal_amino:
+#     prodigal_gff_df = gff_to_pddf(opts.prodigal_gff)
+#     prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
+# # elif opts.prodigal_gff and not opts.prodigal_amino or not opts.prodigal_gff and opts.prodigal_amino:
+# #     torun = [k for k in [opts.prodigal_gff, opts.prodigal_amino] if not k]
+# else:
 
-    print('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
-    print(prodigal_command[0])
-    subprocess.run(prodigal_command[0], shell=False)
+#Generate and run the Prodigal command
+prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
+outfmt=prodigal_outfmt, prodigal='prodigal')
 
-    prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
+#print('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
+#print(prodigal_command[0])
+subprocess.run(prodigal_command[0], shell=False)
 
-else:
+prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
 
+PRODIGAL_SOURCES = [nt_fasta]
+PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
+PRODIGAL_OPTS = prodigal_opts
+PRODIGAL_OPTS['-o'] = '${TARGETS}[0]'
+PRODIGAL_OPTS['-a'] = '${TARGETS}[1]'
+PRODIGAL_OPTS['-d'] = '${TARGETS}[2]'
+PRODGIAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
+outfmt=prodigal_outfmt, prodigal='prodigal')
+SConstruct.write('env.Command([%s], [%s], "%s")' % (','.join(PRODIGAL_TARGETS), ','.join(PRODGIAL_SOURCES), PRODIGAL_COMMAND))
 # #==============================================================================
 #Fetch the CRISPR-neighboring genes
-neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
+#neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-fetch_gene_clusters(gff_anchor=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent, prodigal=True)
+#fetch_gene_clusters(gff_anchor=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent, prodigal=True)
+
+#'python3 fetch_gene_clusters.py --gff ${SOURCES}[0] --in_fasta ${SOURCES}[1] --out_fasta $TARGET --winsize = 10000'
 #==============================================================================
 # #Subtype the groups of CRISPR-neighboring genes
 # macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
@@ -218,3 +242,5 @@ fetch_gene_clusters(gff_anchor=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, o
 #
 # else:
 #     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
+
+SConstruct.close()

@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y apt-utils \
     python3-pip \
     python2.7 \
     python-pip \
+    scons \
     git \
     wget \
     hmmer \

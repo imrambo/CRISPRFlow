@@ -1,6 +1,27 @@
 #!/usr/bin/python3
+"""
+Motivation: functions for converting GFF3 files.
+
+Author: Ian Rambo
+
+Thirteen... that's a mighty unlucky number... for somebody!
+"""
 #------------------------------------------------------------------------------
-def gff3_parser(gff_file, program='general'):
+def gff_to_pddf(gff, ftype=''):
+    """Read in a GFF file as a Pandas data frame. Specify ftype to select
+    rows pertaining to a specific feature type."""
+    gff_cols = ['source', 'ftype', 'start', 'end', 'score', 'strand',
+    'phase', 'attributes']
+    if os.path.exists(gff) and os.stat(gff).st_size != 0:
+        gff_df = pd.read_csv(crispr_gff, sep='\s+', names=gff_cols, comment='#')
+
+        if ftype:
+            gff_df = gff_df[gff_df['ftype'] == ftype]
+            return gff_df
+        else:
+            return gff_df
+#------------------------------------------------------------------------------
+def gff3_to_dict(gff_file, program='general'):
     """
     Parse GFF3 files and return a dictionary.
     For program, specify 'prodigal' or 'minced'
