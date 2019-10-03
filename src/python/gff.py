@@ -7,16 +7,16 @@ Author: Ian Rambo
 Thirteen... that's a mighty unlucky number... for somebody!
 """
 #------------------------------------------------------------------------------
-def gff_to_pddf(gff, ftype=''):
+def gff3_to_pddf(gff, ftype='', index_col=False):
     import numpy as np
     import pandas as pd
     import os
-    """Read in a GFF file as a Pandas data frame. Specify ftype to select
+    """Read in a GFF3 file as a Pandas data frame. Specify ftype to select
     rows pertaining to a specific feature type."""
     gff_cols = ['source', 'ftype', 'start', 'end', 'score', 'strand',
     'phase', 'attributes']
     if os.path.exists(gff) and os.stat(gff).st_size != 0:
-        gff_df = pd.read_csv(crispr_gff, sep='\s+', names=gff_cols, comment='#')
+        gff_df = pd.read_csv(gff, sep='\s+', names=gff_cols, comment='#', index_col=index_col)
 
         if ftype:
             gff_df = gff_df[gff_df['ftype'] == ftype]

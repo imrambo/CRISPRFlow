@@ -24,9 +24,9 @@ from prodigal import *
 from shell_tools import *
 from gff import gff_to_pddf
 
-# FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
-# logging.basicConfig(format=FORMAT)
-# logging.get_logger()
+FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+logging.basicConfig(format=FORMAT)
+logging.get_logger()
 #==============================================================================
 def get_basename(file_path):
     basename = os.path.basename(file_path)
@@ -147,6 +147,7 @@ crispr_detect_opts = {'-f':nt_fasta,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
  '-logfile':crispr_detect_log}
 
+
 ###---Run CRISPRDetect---###
 if not opts.crispr_gff:
     #Run CRISPRDetect
@@ -155,11 +156,17 @@ if not opts.crispr_gff:
     crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_opts)
     #subprocess.run([crispr_detect_exec, crispr_detect_optstring], shell=False)
     subprocess.run(crispr_detect_optlist, shell=False)
+    crispr_detect_gff = crispr_detect_out + '.gff'
 
-    crispr_gff = crispr_detect_out + '.gff'
-    print(crispr_gff)
 else:
-    crispr_gff = opts.crispr_gff
+    crispr_detect_gff = opts.crispr_gff
+
+if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
+    #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
+    crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region')
+else:
+    logging.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
+
 
 
 # CRISPR_SOURCES = [nt_fasta]
@@ -170,9 +177,6 @@ else:
 # CRISPR_OPTS['-f'] = '$SOURCE'
 # CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
 # SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
-
-#Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
-crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
 #==============================================================================
 # ###---Prodigal---###
 prodigal_outfmt = 'gff'
