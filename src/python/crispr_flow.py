@@ -158,14 +158,14 @@ else:
     crispr_gff = opts.crispr_gff
 
 
-CRISPR_SOURCES = [nt_fasta]
-CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for filename in filenames for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect'])]
-CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
-CRISPR_OPTS = crispr_detect_optlist
-CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
-CRISPR_OPTS['-f'] = '$SOURCE'
-CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
-SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
+# CRISPR_SOURCES = [nt_fasta]
+# CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for filename in filenames for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect'])]
+# CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
+# CRISPR_OPTS = crispr_detect_optlist
+# CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
+# CRISPR_OPTS['-f'] = '$SOURCE'
+# CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
+# SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
 
 #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
 crispr_gff_df = gff_to_pddf(gff = crispr_gff, ftype = 'repeat_region')
@@ -196,15 +196,16 @@ subprocess.run(prodigal_command[0], shell=False)
 
 prodigal_faa_dict = make_seqdict(prodigal_command[1]['-a'], prodigal=True)
 
-PRODIGAL_SOURCES = [nt_fasta]
-PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
-PRODIGAL_OPTS = prodigal_opts
-PRODIGAL_OPTS['-o'] = '${TARGETS}[0]'
-PRODIGAL_OPTS['-a'] = '${TARGETS}[1]'
-PRODIGAL_OPTS['-d'] = '${TARGETS}[2]'
-PRODGIAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
-outfmt=prodigal_outfmt, prodigal='prodigal')
-SConstruct.write('env.Command([%s], [%s], "%s")' % (','.join(PRODIGAL_TARGETS), ','.join(PRODGIAL_SOURCES), PRODIGAL_COMMAND))
+# PRODIGAL_SOURCES = [nt_fasta]
+# PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
+# PRODIGAL_OPTS = prodigal_opts
+# PRODIGAL_OPTS['-o'] = '${TARGETS}[0]'
+# PRODIGAL_OPTS['-a'] = '${TARGETS}[1]'
+# PRODIGAL_OPTS['-d'] = '${TARGETS}[2]'
+# PRODGIAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
+# outfmt=prodigal_outfmt, prodigal='prodigal')
+# SConstruct.write('env.Command([%s], [%s], "%s")' % (','.join(PRODIGAL_TARGETS), ','.join(PRODGIAL_SOURCES), PRODIGAL_COMMAND))
+
 # #==============================================================================
 #Fetch the CRISPR-neighboring genes
 #neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
