@@ -29,7 +29,8 @@ def fetch_clusters(anchor_gff_df, gene_gff_df, gene_seq_dict, winsize, att_fs=';
 
     cluster_genes = dict()
 
-    for i in anchor_gff_df.index:
+    #for i in anchor_gff_df.index:
+    for i, row in enumerate(anchor_gff_df.itertuples(), 1):
         anchor_source = anchor_gff_df.at[i, 'source']
         anchor_start = anchor_gff_df.at[i, 'start']
         anchor_end = anchor_gff_df.at[i, 'end']
