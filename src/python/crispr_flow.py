@@ -71,7 +71,7 @@ if opts.joblog:
         pass
     logging.basicConfig(filename = opts.joblog, level = logging.DEBUG, format = logging_format)
 else:
-    logging.basicConfig(filename = 'CRISPRFlow.%s.joblog' % str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
+    logging.basicConfig(filename = os.path.join(opts.tmp_dir, 'CRISPRFlow.%s.joblog' % str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))),
     level = logging.DEBUG, format = logging_format)
 
 logger = logging.getLogger()
