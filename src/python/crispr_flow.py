@@ -223,9 +223,8 @@ else:
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-#fetch_gene_clusters(gff_anchor=crispr_gff_df, gene_seq_dict=prodigal_faa_dict, out_fasta=neighbor_aa_fasta, winsize=opts.window_extent, prodigal=True)
-
-#'python3 fetch_gene_clusters.py --gff ${SOURCES}[0] --in_fasta ${SOURCES}[1] --out_fasta $TARGET --winsize = 10000'
+neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_detect_gff, gene_gff_df=prodigal_out, gene_seq_dict=, winsize=opts.winsize, att_fs=';')
+print(neighbor_gene_clusters)
 #==============================================================================
 # #Subtype the groups of CRISPR-neighboring genes
 # macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
