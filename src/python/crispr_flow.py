@@ -24,41 +24,8 @@ from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
 from gene_clusters import *
+from datetime import datetime
 
-# FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
-# logging.basicConfig(format=FORMAT)
-# logging.get_logger()
-#==============================================================================
-def get_basename(file_path):
-    basename = os.path.basename(file_path)
-    #Remove two extensions, e.g. foo.tar.gz becomes foo
-    if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
-        basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
-    else:
-        basename = os.path.splitext(basename)[0]
-    return basename
-#------------------------------------------------------------------------------
-# def make_seqdict(fasta, prodigal=False, gz=False, format='fasta'):
-#     """
-#     Create a SeqIO sequence dictionary. If prodigal is True,
-#     add gene start and stop coordinates from FASTA header to the dictionary.
-#     """
-#     if gz:
-#         seq_handle = gzip.open(fasta, 'rb')
-#     else:
-#         seq_handle = open(fasta, 'r')
-#
-#     seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
-#     # if prodigal:
-#     #     for key in seq_dict.keys():
-#     #         seq_dict[key].gene_start = int(seq_dict[key].description.split('#')[1])
-#     #         seq_dict[key].gene_stop = int(seq_dict[key].description.split('#')[2])
-#     #         #seq_dict[key]['gene_start'] = int(seq_dict[key].description.split('#')[1])
-#     #         #seq_dict[key]['gene_stop'] = int(seq_dict[key].description.split('#')[2])
-#     #     print(seq_dict)
-#     #     return seq_dict
-#     # else:
-#     return seq_dict
 #==============================================================================
 build_root = '../..'
 #==============================================================================
@@ -81,8 +48,8 @@ parser.add_argument('--prodigal_amino', type=str, dest='prodigal_amino', action=
 help='Prodigal amino acid file. Optional. If supplied, Prodigal will not be run.')
 parser.add_argument('--window_extent', type=int, dest='window_extent', action='store', default=10000,
 help='Number of bp extension to include in a cluster. Default = 10kb.')
-parser.add_argument('--joblog_dir', type=str, dest='joblog_dir', action='store',
-nargs = '?', help='Directory for log files.')
+parser.add_argument('--joblog', type=str, dest='joblog', action='store',
+nargs = '?', help='Path to logging joblog.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
 help='Directory for CRISPRDetect.pl', default='/build/CRISPRDetect_2.4/CRISPRDetect_2.4')
 parser.add_argument('--database', type=str, dest='database', action='store',
@@ -97,6 +64,15 @@ opts = parser.parse_args()
 
 if opts.jobs < 1:
     logging.warning('--jobs must be >= 1')
+
+
+if opts.joblog:
+    logging.basicConfig(filename = opts.joblog, level = logging.DEBUG)
+else:
+    logging.basicConfig(filename = 'CRISPRFlow.%s.joblog' % str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
+    level = logging.DEBUG)
+
+logger = logging.getLogger()
 #==============================================================================
 #Create the output directories
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
@@ -226,6 +202,9 @@ neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '
 neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_detect_gff, gene_gff_df=prodigal_out, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
 print(neighbor_gene_clusters)
 #==============================================================================
+
+#class CRISPR_Cas:
+
 # #Subtype the groups of CRISPR-neighboring genes
 # macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
 # '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,

@@ -55,8 +55,9 @@ def prodigal_command_generate(ntfasta, optdict, outfmt='gff', version=2, prodiga
     #GUNZIP PIPE
 
     if not '-p' in optdict.keys():
-        prodigal_mode = prodigal_mode_select(ntfasta, version=version)
-        optdict['-p'] = prodigal_mode[0]
+        optdict['-p'] = 'normal'
+        #prodigal_mode = prodigal_mode_select(ntfasta, version=version)
+        #optdict['-p'] = prodigal_mode[0]
     else:
         pass
 
