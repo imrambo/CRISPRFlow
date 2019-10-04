@@ -63,7 +63,7 @@ help='optional prefix for output files. Uses the input nt fasta basename if not 
 opts = parser.parse_args()
 
 #Set up logger
-logging_format = '%(Levelname)s %(asctime)s - $(message)s'
+logging_format = '%(levelname)s %(asctime)s - $(message)s'
 if opts.joblog:
     #Create the joblog directory if not specified
     if not os.path.exists(os.path.dirname(opts.joblog)):
