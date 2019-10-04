@@ -117,12 +117,12 @@ else:
 #==============================================================================
 ###---CRISPRDetect---###
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
-crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
+#crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 #CRISPRDetect options
 crispr_detect_opts = {'-f':nt_fasta,
 '-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':20,
-'-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
- '-logfile':crispr_detect_log}
+'-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir}
+ #'-logfile':crispr_detect_log}
 
 
 ###---Run CRISPRDetect---###
@@ -146,9 +146,9 @@ else:
 
 CRISPR_SOURCES = [nt_fasta]
 CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect']) for filename in filenames]
-CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
+#CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
 CRISPR_OPTS = crispr_detect_optlist
-CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
+#CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
 CRISPR_OPTS['-f'] = '$SOURCE'
 CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
 SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
