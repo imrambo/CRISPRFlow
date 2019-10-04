@@ -168,7 +168,7 @@ prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_
 outfmt=prodigal_outfmt, prodigal='prodigal')
 
 logger.debug('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
-print(prodigal_command[0])
+
 subprocess.run(prodigal_command[0], shell=False)
 
 if os.path.exists(prodigal_out) and os.stat(prodigal_out).st_size != 0:
@@ -187,10 +187,10 @@ PRODIGAL_OPTS = prodigal_opts
 PRODIGAL_OPTS['-o'] = '${TARGETS}[0]'
 PRODIGAL_OPTS['-a'] = '${TARGETS}[1]'
 PRODIGAL_OPTS['-d'] = '${TARGETS}[2]'
-PRODGIAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
+PRODIGAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
 outfmt=prodigal_outfmt, prodigal='prodigal')
 
-PRODIGAL_CMDBLD = scons_command(targets = PRODIGAL_TARGETS, sources = PRODIGAL_SOURCES, command = PRODIGAL_COMMAND)
+PRODIGAL_CMDBLD = scons_command(targets = PRODIGAL_TARGETS, sources = PRODIGAL_SOURCES, command = PRODIGAL_COMMAND[0])
 
 SConstruct.write(PRODIGAL_CMDBLD + '\n')
 #==============================================================================
