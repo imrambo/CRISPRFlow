@@ -12,6 +12,7 @@ import magic
 import gzip
 import os
 import logging
+import re
 
 def optstring_join(optdict):
     """
