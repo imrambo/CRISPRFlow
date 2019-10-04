@@ -18,14 +18,17 @@ import subprocess
 import magic
 import gzip
 import re
-import datetime
+from datetime import datetime
 from hmmbo import *
 from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
 from gene_clusters import *
-from datetime import datetime
-
+#==============================================================================
+def scons_command(targets, sources, command, env='env'):
+    """Create a Command builder for SCons"""
+    COMMAND = '%s.Command(["%s"], ["%s"], "%s")\n' % (env, '",'.join(targets), '",'.join(sources), command)
+    return COMMAND
 #==============================================================================
 build_root = '../..'
 #==============================================================================
@@ -126,18 +129,13 @@ crispr_detect_optdict = {'-f':nt_fasta,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir}
  #'-logfile':crispr_detect_log}
 
-
 ###---Run CRISPRDetect---###
-
 logger.debug('Run CRISPRDetect')
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 subprocess.run(crispr_detect_optlist, shell=False)
 crispr_detect_gff = crispr_detect_out + '.gff'
-
-#else:
-#    crispr_detect_gff = opts.crispr_gff
 
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
@@ -153,7 +151,9 @@ CRISPR_OPTS = crispr_detect_optdict
 #CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
 CRISPR_OPTS['-f'] = '$SOURCE'
 CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
-SConstruct.write('env.Command(["%s"], ["%s"], "%s")\n' % ('",'.join(CRISPR_TARGETS), '",'.join(CRISPR_SOURCES), CRISPR_COMMAND))
+
+CRISPR_CMDBLD = scons_command(targets = CRISPR_TARGETS, sources = CRISPR_SOURCES, command = CRISPR_COMMAND)
+SConstruct.write(CRISPR_CMDBLD + '\n')
 #==============================================================================
 # ###---Prodigal---###
 prodigal_outfmt = 'gff'
@@ -168,6 +168,7 @@ prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_
 outfmt=prodigal_outfmt, prodigal='prodigal')
 
 logger.debug('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
+print(prodigal_command[0])
 subprocess.run(prodigal_command[0], shell=False)
 
 if os.path.exists(prodigal_out) and os.stat(prodigal_out).st_size != 0:
@@ -180,13 +181,6 @@ if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
 else:
     logger.error('Prodigal amino acid fasta %s not valid' % prodigal_aa)
 
-# if opts.prodigal_gff and opts.prodigal_amino:
-#     prodigal_gff_df = gff_to_pddf(opts.prodigal_gff)
-#     prodigal_faa_dict = make_seqdict(opts.prodigal_amino, prodigal=True)
-# # elif opts.prodigal_gff and not opts.prodigal_amino or not opts.prodigal_gff and opts.prodigal_amino:
-# #     torun = [k for k in [opts.prodigal_gff, opts.prodigal_amino] if not k]
-# else:
-
 PRODIGAL_SOURCES = [nt_fasta]
 PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
 PRODIGAL_OPTS = prodigal_opts
@@ -195,7 +189,10 @@ PRODIGAL_OPTS['-a'] = '${TARGETS}[1]'
 PRODIGAL_OPTS['-d'] = '${TARGETS}[2]'
 PRODGIAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
 outfmt=prodigal_outfmt, prodigal='prodigal')
-SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(PRODIGAL_TARGETS), ','.join(PRODGIAL_SOURCES), PRODIGAL_COMMAND))
+
+PRODIGAL_CMDBLD = scons_command(targets = PRODIGAL_TARGETS, sources = PRODIGAL_SOURCES, command = PRODIGAL_COMMAND)
+
+SConstruct.write(PRODIGAL_CMDBLD + '\n')
 #==============================================================================
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
