@@ -223,7 +223,7 @@ else:
 #Fetch the CRISPR-neighboring genes
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_detect_gff, gene_gff_df=prodigal_out, gene_seq_dict=, winsize=opts.winsize, att_fs=';')
+neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_detect_gff, gene_gff_df=prodigal_out, gene_seq_dict=prodigal_aa_dict, winsize=opts.winsize, att_fs=';')
 print(neighbor_gene_clusters)
 #==============================================================================
 # #Subtype the groups of CRISPR-neighboring genes
