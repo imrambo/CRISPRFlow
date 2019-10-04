@@ -12,7 +12,7 @@ def make_seqdict(input_file, format='fasta'):
         seq_handle = gzip.open(input_file, 'rb')
     else:
         seq_handle = open(input_file, 'r')
-        
+
     seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
 
     return seq_dict
@@ -26,10 +26,6 @@ def fetch_clusters(anchor_gff_df, gene_gff_df, gene_seq_dict, winsize, att_fs=';
     The winsize will fetch features within x bp of the anchor start and end.
     att_fs is the field separator for the attribute gff column.
     """
-    #Do column names match?
-    if not list(anchor_gff_df.columns.values) == list(gene_gff_df.columns.values):
-        #Reset the column names
-        pass
 
     cluster_genes = dict()
 

@@ -27,7 +27,7 @@ from gene_clusters import *
 #==============================================================================
 def scons_command(targets, sources, command, env='env'):
     """Create a Command builder for SCons"""
-    COMMAND = '%s.Command(["%s"], ["%s"], "%s")\n' % (env, '",'.join(targets), '",'.join(sources), command)
+    COMMAND = '%s.Command(["%s"], ["%s"], "%s")\n' % (env, '","'.join(targets), '",'.join(sources), command)
     return COMMAND
 #==============================================================================
 build_root = '../..'
