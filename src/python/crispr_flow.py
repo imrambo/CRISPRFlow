@@ -1,5 +1,5 @@
 """
-Motivation:
+Motivation: CRISPRCas discovery and subtyping
 
 Author: Ian Rambo
 Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
