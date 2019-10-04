@@ -62,6 +62,7 @@ parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='
 help='optional prefix for output files. Uses the input nt fasta basename if not supplied.')
 opts = parser.parse_args()
 
+#Set up logger
 logging_format = '%(Levelname)s %(asctime)s - $(message)s'
 if opts.joblog:
     #Create the joblog directory if not specified
@@ -127,8 +128,8 @@ crispr_detect_optdict = {'-f':nt_fasta,
 
 
 ###---Run CRISPRDetect---###
-#if not opts.crispr_gff:
-#Run CRISPRDetect
+
+logger.debug('Run CRISPRDetect')
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
@@ -152,7 +153,7 @@ CRISPR_OPTS = crispr_detect_optdict
 #CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
 CRISPR_OPTS['-f'] = '$SOURCE'
 CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
-SConstruct.write('env.Command([%s], [%s], "%s")\n' % (','.join(CRISPR_TARGETS), ','.join(CRISPR_SOURCES), CRISPR_COMMAND))
+SConstruct.write('env.Command(["%s"], ["%s"], "%s")\n' % ('",'.join(CRISPR_TARGETS), '",'.join(CRISPR_SOURCES), CRISPR_COMMAND))
 #==============================================================================
 # ###---Prodigal---###
 prodigal_outfmt = 'gff'
@@ -166,7 +167,7 @@ prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt}
 prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
 outfmt=prodigal_outfmt, prodigal='prodigal')
 
-print('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
+logger.debug('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
 subprocess.run(prodigal_command[0], shell=False)
 
 if os.path.exists(prodigal_out) and os.stat(prodigal_out).st_size != 0:
