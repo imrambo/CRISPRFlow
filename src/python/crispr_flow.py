@@ -62,22 +62,22 @@ parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='
 help='optional prefix for output files. Uses the input nt fasta basename if not supplied.')
 opts = parser.parse_args()
 
-if opts.jobs < 1:
-    logging.warning('--jobs must be >= 1')
-
-
+logging_format = '%(Levelname)s %(asctime)s - $(message)s'
 if opts.joblog:
     #Create the joblog directory if not specified
     if not os.path.exists(os.path.dirname(opts.joblog)):
         os.makedirs(os.path.dirname(opts.joblog))
     else:
         pass
-    logging.basicConfig(filename = opts.joblog, level = logging.DEBUG)
+    logging.basicConfig(filename = opts.joblog, level = logging.DEBUG, format = logging_format)
 else:
     logging.basicConfig(filename = 'CRISPRFlow.%s.joblog' % str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
-    level = logging.DEBUG)
+    level = logging.DEBUG, format = logging_format)
 
 logger = logging.getLogger()
+
+if opts.jobs < 1:
+    logger.warning('--jobs must be >= 1')
 #==============================================================================
 #Create the output directories
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
@@ -88,6 +88,7 @@ for key, value in output_paths.items():
     else:
         pass
 
+#Output SConstruct to rebuild the analysis
 SConstruct = open('SConstruct', 'w')
 SConstruct.write('env = Environment()\n')
 #==============================================================================
@@ -141,10 +142,10 @@ if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
 else:
-    logging.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
+    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
 CRISPR_SOURCES = [nt_fasta]
-CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for filename in filenames for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect'])]
+CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect']) for filename in filenames]
 CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
 CRISPR_OPTS = crispr_detect_optlist
 CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
@@ -170,12 +171,12 @@ subprocess.run(prodigal_command[0], shell=False)
 if os.path.exists(prodigal_out) and os.stat(prodigal_out).st_size != 0:
     prodigal_gff_df = gff3_to_pddf(gff = prodigal_out, ftype = 'CDS', index_col=False)
 else:
-    logging.error('GFF3 file %s not valid' % prodigal_out)
+    logger.error('GFF3 file %s not valid' % prodigal_out)
 
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 else:
-    logging.error('Prodigal amino acid fasta %s not valid' % prodigal_aa)
+    logger.error('Prodigal amino acid fasta %s not valid' % prodigal_aa)
 
 # if opts.prodigal_gff and opts.prodigal_amino:
 #     prodigal_gff_df = gff_to_pddf(opts.prodigal_gff)
