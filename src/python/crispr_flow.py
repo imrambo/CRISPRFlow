@@ -80,7 +80,7 @@ if opts.jobs < 1:
     logger.warning('--jobs must be >= 1')
 #==============================================================================
 #Create the output directories
-output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
+output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER', 'SCons']}
 
 for key, value in output_paths.items():
     if not os.path.exists(value):
@@ -89,7 +89,8 @@ for key, value in output_paths.items():
         pass
 
 #Output SConstruct to rebuild the analysis
-SConstruct = open('SConstruct', 'w')
+sconstruct_handle = os.path.join(output_paths['SCons'], 'SConstruct')
+SConstruct = open(sconstruct_handle, 'w')
 SConstruct.write('env = Environment()\n')
 #==============================================================================
 #Options for GNU parallel
@@ -119,24 +120,23 @@ else:
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
 #crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 #CRISPRDetect options
-crispr_detect_opts = {'-f':nt_fasta,
+crispr_detect_optdict = {'-f':nt_fasta,
 '-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':20,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir}
  #'-logfile':crispr_detect_log}
 
 
 ###---Run CRISPRDetect---###
-if not opts.crispr_gff:
-    #Run CRISPRDetect
-    crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
+#if not opts.crispr_gff:
+#Run CRISPRDetect
+crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
-    crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_opts)
-    #subprocess.run([crispr_detect_exec, crispr_detect_optstring], shell=False)
-    subprocess.run(crispr_detect_optlist, shell=False)
-    crispr_detect_gff = crispr_detect_out + '.gff'
+crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
+subprocess.run(crispr_detect_optlist, shell=False)
+crispr_detect_gff = crispr_detect_out + '.gff'
 
-else:
-    crispr_detect_gff = opts.crispr_gff
+#else:
+#    crispr_detect_gff = opts.crispr_gff
 
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
@@ -144,10 +144,11 @@ if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0
 else:
     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
+#Write the CRISPRDetect command to SConstruct Command builder
 CRISPR_SOURCES = [nt_fasta]
 CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect']) for filename in filenames]
 #CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
-CRISPR_OPTS = crispr_detect_optlist
+CRISPR_OPTS = crispr_detect_optdict
 #CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
 CRISPR_OPTS['-f'] = '$SOURCE'
 CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
