@@ -67,6 +67,11 @@ if opts.jobs < 1:
 
 
 if opts.joblog:
+    #Create the joblog directory if not specified
+    if not os.path.exists(os.path.dirname(opts.joblog)):
+        os.makedirs(os.path.dirname(opts.joblog))
+    else:
+        pass
     logging.basicConfig(filename = opts.joblog, level = logging.DEBUG)
 else:
     logging.basicConfig(filename = 'CRISPRFlow.%s.joblog' % str(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
@@ -82,12 +87,6 @@ for key, value in output_paths.items():
         os.makedirs(value)
     else:
         pass
-
-#Create the joblog directory if not specified
-if not os.path.exists(opts.joblog_dir):
-    os.makedirs(opts.joblog_dir)
-else:
-    pass
 
 # SConstruct = open('SConstruct', 'w')
 # SConstruct.write('env = Environment()\n')
