@@ -37,7 +37,7 @@ def fetch_clusters(anchor_gff_df, gene_gff_df, gene_seq_dict, winsize, att_fs=';
         anchor_id = anchor_gff_df.at[i, 'attributes'].split(att_fs)[0].split('=')[1].split('_')[0]
         print(anchor_seqid, anchor_start, anchor_end, anchor_id)
         gene_cluster_df = gene_gff_df[(gene_gff_df['seqid'] == anchor_seqid) & (gene_gff_df['start'] >= anchor_start - winsize) & (gene_gff_df['end'] <= anchor_end + winsize)]
-        gene_cluster_df['gene_id'] = gene_cluster_df['seqid'].astype(str) + '_' + cluster_df['attributes'].str.split(att_fs).str[0].str.split('=').str[1].str.split('_').str[1]
+        gene_cluster_df['gene_id'] = gene_cluster_df['seqid'].astype(str) + '_' + gene_cluster_df['attributes'].str.split(att_fs).str[0].str.split('=').str[1].str.split('_').str[1]
         print(gene_cluster_df)
         #seq_objs = [gene_seq_dict[key] if gid[1] == gene_seq_dict[key].description.split('#')[0] for key in gene_seq_dict.keys() for gid in gene_cluster_df['gene_id'].iteritems()]
         seq_objs = [gene_seq_dict[key] for key in gene_seq_dict.keys() for gid in gene_cluster_df['gene_id'].iteritems() if gid[1] == gene_seq_dict[key].description.split('#')[0]]
