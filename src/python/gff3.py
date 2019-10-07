@@ -13,7 +13,7 @@ def gff3_to_pddf(gff, ftype='', index_col=False):
     import os
     """Read in a GFF3 file as a Pandas data frame. Specify ftype to select
     rows pertaining to a specific feature type."""
-    gff_cols = ['source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+    gff_cols = ['seqid', 'source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     if os.path.exists(gff) and os.stat(gff).st_size != 0:
         gff_df = pd.read_csv(gff, sep='\s+', names=gff_cols, comment='#', index_col=index_col)
 
