@@ -97,6 +97,9 @@ def gff3_to_dict(gff_file, program='general'):
                     'gc_cont':gc_cont, 'confidence':confidence, 'cscore':cscore,
                     'sscore':sscore, 'rscore':rscore, 'uscore':uscore,
                     'tscore':tscore}
+                elif program == 'crisprdetect':
+                    pass
+
 
                 else:
                     logging.info('no gff parsing method specified')

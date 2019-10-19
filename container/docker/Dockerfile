@@ -62,7 +62,8 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
     && python2.7 setup.py install
 
 
-RUN cd /build && git clone -b play_notebook --single-branch https://github.com/imrambo/CRISPRFlow.git
+#RUN cd /build && git clone -b play_notebook --single-branch https://github.com/imrambo/CRISPRFlow.git
+
 
 RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
     && wget http://github.com/bbuchfink/diamond/releases/download/v0.9.26/diamond-linux64.tar.gz \
@@ -71,20 +72,7 @@ RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
 ENV PATH "$PATH:/build/DIAMOND"
 
 
-###---Databases---###
-#RUN mkdir /build/database/TIGRFAM && cd /build/database/TIGRFAM \
-#    && wget ftp://ftp.jcvi.org/pub/data/TIGRFAMs/TIGRFAMs_15.0_HMM.tar.gz \
-#    && tar -zxf TIGRFAMs_15.0_HMM.tar.gz \
-#    && rm TIGRFAMs_15.0_HMM.tar.gz
 
-#RUN mkdir /build/database/ANTIFAM && cd /build/database/ANTIFAM \
-#    && wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/AntiFam/current/Antifam.tar.gz \
-#    && tar -zxf Antifam.tar.gz \
-#    && rm Antifam.tar.gz
-
-#RUN mkdir /build/database/PFAM-A && cd /build/database/PFAM-A \
-#    && wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz \
-#    && gunzip Pfam-A.hmm.gz
 
 #CAZymes
 #http://bcb.unl.edu/dbCAN2/download/Databases/?C=M;O=D
