@@ -133,8 +133,9 @@ logger.debug('Run CRISPRDetect')
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
-subprocess.run(crispr_detect_optlist, shell=False)
-crispr_detect_gff = crispr_detect_out + '.gff'
+' '.join(crispr_detect_optlist)
+# subprocess.run(crispr_detect_optlist, shell=False)
+# crispr_detect_gff = crispr_detect_out + '.gff'
 
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords

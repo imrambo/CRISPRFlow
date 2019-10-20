@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
 MAINTAINER Ian Rambo ian.rambo@utexas.edu
+#Dockerfile for CRISPRFlow pipeline
 
 USER root
 
@@ -8,6 +9,8 @@ RUN apt-get update && apt-get install -y apt-utils \
     zlib1g-dev \
     default-jre \
     software-properties-common \
+    libdb-dev \
+    curl \
     python3.7 \
     python3-pip \
     python2.7 \
@@ -28,18 +31,19 @@ RUN apt-get update && apt-get install -y apt-utils \
     libtool \
     gcc \
     make \
+    cmake \
     g++ \
     unzip \
     sudo \
     parallel \
+    libstdc++6 \
+    libgomp1 \
     vim \
     && apt-get clean
 
-RUN add-apt-repository -y ppa:deadsnakes/ppa
-
 RUN pip3 install biopython pandas scons python-magic
 #------------------------------------------------------------------------------
-RUN mkdir -p /build/database
+RUN mkdir -p /build
 
 #CRISPRDetect_2.4
 RUN cd /build && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
@@ -61,18 +65,21 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
     && python2.7 setup.py test -vv \
     && python2.7 setup.py install
 
-
-#RUN cd /build && git clone -b play_notebook --single-branch https://github.com/imrambo/CRISPRFlow.git
-
-
+#DIAMOND
 RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
     && wget http://github.com/bbuchfink/diamond/releases/download/v0.9.26/diamond-linux64.tar.gz \
     && tar -zxf diamond-linux64.tar.gz \
     && rm diamond-linux64.tar.gz
 ENV PATH "$PATH:/build/DIAMOND"
 
+#HHSuite
+RUN cd /build \
+    && git clone https://github.com/soedinglab/hh-suite.git \
+    && mkdir -p hh-suite/build \
+    && cd hh-suite/build \
+    && cmake -DCMAKE_INSTALL_PREFIX=. .. \
+    && make -j 4 \
+    && make install
+ENV PATH "$PATH:"$(pwd)/bin:$(pwd)/scripts""
 
-
-
-#CAZymes
-#http://bcb.unl.edu/dbCAN2/download/Databases/?C=M;O=D
+RUN cd /build && git clone -b fuzzyfinn --single-branch https://github.com/imrambo/CRISPRFlow.git

@@ -29,14 +29,12 @@ def fetch_clusters(anchor_gff_df, gene_gff_df, gene_seq_dict, winsize, att_fs=';
 
     cluster_genes = dict()
 
-    for key, value in anchor_gff_df
-
     #for i in anchor_gff_df.index:
     for i, row in enumerate(anchor_gff_df.itertuples(), 0):
         anchor_seqid = anchor_gff_df.at[i, 'seqid']
         anchor_start = anchor_gff_df.at[i, 'start']
         anchor_end = anchor_gff_df.at[i, 'end']
-        #anchor_id = anchor_gff_df.at[i, 'attributes'].split(att_fs)[0].split('=')[1].split('_')[0]
+        anchor_id = anchor_gff_df.at[i, 'attributes'].split(att_fs)[0].split('=')[1].split('_')[0]
         print(anchor_seqid, anchor_start, anchor_end, anchor_id)
         gene_cluster_df = gene_gff_df[(gene_gff_df['seqid'] == anchor_seqid) & (gene_gff_df['start'] >= anchor_start - winsize) & (gene_gff_df['end'] <= anchor_end + winsize)]
         gene_cluster_df['gene_id'] = gene_cluster_df['seqid'].astype(str) + '_' + gene_cluster_df['attributes'].str.split(att_fs).str[0].str.split('=').str[1].str.split('_').str[1]
