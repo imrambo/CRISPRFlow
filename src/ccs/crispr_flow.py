@@ -120,45 +120,47 @@ crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 
-subprocess.run(crispr_detect_cmd, shell=False)
+#subprocess.run(crispr_detect_cmd, shell=False)
 
 ###---Read the GFF file produced by CRISPRDetect---###
 crispr_detect_gff = crispr_detect_out + '.gff'
 
-# if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
-#     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
-#     crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
-# else:
-#     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
-
-###---Get contigs containing a putative CRISPR array---###
-crispr_contigs = os.path.join(crispr_detect_out, 'contigs_with_crispr.fna')
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
-    crispr_pullseq_cmd = ['grep','repeat_region',crispr_detect_gff,'|','cut','-f1','|','uniq','|','pullseq','-i',nt_fasta,'-N','>',crispr_contigs]
-    print(crispr_pullseq_cmd)
-    subprocess.run(crispr_pullseq_cmd)
+    #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
+    crispr_array_coords = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+    crispr_spacer_coords = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
 else:
-   logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
+    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
-
-###---Pull CRISPR spacers into FNA fasta, get clusters @ 100% identity---###
-crispr_spacers_fna = str()
-crispr_spacers_cluster = str()
-cdhit_est_opts = {'-i':crispr_spacers_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
-cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
-#==============================================================================
-# ###---Prodigal---###
-"""
-Predict genes in contigs containing a putative CRISPR array.
-"""
-prodigal_outfmt = 'gff'
-prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
-prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
-
-prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
-#Generate and run the Prodigal command
-prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
-subprocess.run(prodigal_cmd, shell = False)
+print(crispr_spacer_coords.head())
+# ###---Get contigs containing a putative CRISPR array---###
+# crispr_contigs = os.path.join(crispr_detect_out, 'contigs_with_crispr.fna')
+# if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
+#     crispr_pullseq_cmd = ['grep','repeat_region',crispr_detect_gff,'|','cut','-f1','|','uniq','|','pullseq','-i',nt_fasta,'-N','>',crispr_contigs]
+#     print(crispr_pullseq_cmd)
+#     subprocess.run(crispr_pullseq_cmd, shell=False)
+# else:
+#    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
+#
+#
+# ###---Pull CRISPR spacers into FNA fasta, get clusters @ 100% identity---###
+# crispr_spacers_fna = str()
+# crispr_spacers_cluster = str()
+# cdhit_est_opts = {'-i':crispr_spacers_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
+# cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
+# #==============================================================================
+# # ###---Prodigal---###
+# """
+# Predict genes in contigs containing a putative CRISPR array.
+# """
+# prodigal_outfmt = 'gff'
+# prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
+# prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
+#
+# prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
+# #Generate and run the Prodigal command
+# prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
+# subprocess.run(prodigal_cmd, shell = False)
 #==============================================================================
 
 
@@ -222,9 +224,6 @@ subprocess.run(prodigal_cmd, shell = False)
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
 #neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_gff_df, gene_gff_df=prodigal_gff_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
 #==============================================================================
-
-#class CRISPR_Cas:
-
 # #Subtype the groups of CRISPR-neighboring genes
 # macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
 # '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
