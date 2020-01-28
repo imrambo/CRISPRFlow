@@ -23,7 +23,6 @@ RUN apt-get update && apt-get install -y apt-utils \
     cd-hit \
     muscle \
     clustalw \
-    cd-hit \
     ncbi-blast+ \
     prodigal \
     autoconf \
@@ -80,6 +79,9 @@ RUN cd /build \
     && cmake -DCMAKE_INSTALL_PREFIX=. .. \
     && make -j 4 \
     && make install
-ENV PATH "$PATH:"$(pwd)/bin:$(pwd)/scripts""
+
+ENV PATH "$PATH:/build/hh-suite/build/bin"
+ENV PATH "$PATH:/build/hh-suite/build/scripts"
+
 
 RUN cd /build && git clone -b fuzzyfinn --single-branch https://github.com/imrambo/CRISPRFlow.git
