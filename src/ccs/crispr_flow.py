@@ -107,7 +107,7 @@ else:
 #Make a SeqIO dictionary of the input nucleotide sequences
 #nt_fasta_seqdict = make_seqdict(nt_fasta, format = 'fasta')
 #==============================================================================
-###---CRISPRDetect---###
+###---BEGIN CRISPRDetect---###
 ###---Run CRISPRDetect---###
 logger.info('Run CRISPRDetect')
 
@@ -174,40 +174,33 @@ with open(crispr_contig_names, 'w') as carray_names:
     for seqid in list(set(crispr_array_df['seqid'].tolist())):
         carray_names.write(seqid + '\n')
 
+"""
+Pull contigs/scaffolds from input nucleotide FASTA that contain a CRISPR to
+output file that will be processed by Prodigal.
+"""
 pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names}
 pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
-print(pullseq_carray_cmd)
+
 try:
     with open(crispr_contigs, 'w') as crisprcont:
         subprocess.run(pullseq_carray_cmd, stdout=crisprcont)
 except FileNotFoundError:
     logging.error('cannot write CRISPR-containing contigs to file %s' % crispr_contigs)
 
+###---END CRISPRDetect---###
+#==============================================================================
+###---BEGIN Prodigal---###
+"""
+Predict genes in contigs containing a putative CRISPR array.
+"""
+prodigal_outfmt = 'gff'
+prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
+prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 
-# ###---Get contigs containing a putative CRISPR array---###
-#
-# if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
-#     crispr_pullseq_cmd = ['grep','repeat_region',crispr_detect_gff,'|','cut','-f1','|','uniq','|','pullseq','-i',nt_fasta,'-N','>',crispr_contigs]
-#     print(crispr_pullseq_cmd)
-#     subprocess.run(crispr_pullseq_cmd, shell=False)
-# else:
-#    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
-#
-#
-
-# #==============================================================================
-# # ###---Prodigal---###
-# """
-# Predict genes in contigs containing a putative CRISPR array.
-# """
-# prodigal_outfmt = 'gff'
-# prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
-# prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
-#
-# prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
-# #Generate and run the Prodigal command
-# prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
-# subprocess.run(prodigal_cmd, shell = False)
+prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
+#Generate and run the Prodigal command
+prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
+subprocess.run(prodigal_cmd, shell = False)
 #==============================================================================
 
 
