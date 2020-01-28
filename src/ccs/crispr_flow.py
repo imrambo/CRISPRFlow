@@ -105,7 +105,7 @@ else:
     pass
 #==============================================================================
 ###---CRISPRDetect---###
-crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
+crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '%s_CRISPRDetect')
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 
 #CRISPRDetect options
@@ -134,7 +134,7 @@ else:
     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
 #Write the CRISPR spacers to an output nucleotide FASTA
-crispr_spacer_fna = os.path.join(crispr_detect_out, '%s_crispr_spacers.fna' % opts.prefix)
+crispr_spacer_fna = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers.fna' % opts.prefix)
 
 with open(crispr_spacer_fna, 'w') as spacer_fa:
     for index, row in crispr_spacer_df.head().iterrows():
