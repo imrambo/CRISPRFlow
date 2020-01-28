@@ -106,7 +106,7 @@ else:
 #==============================================================================
 ###---CRISPRDetect---###
 #Pattern for CRISPRDetect output
-crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '%s_CRISPRDetect')
+crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 
 #CRISPRDetect options
