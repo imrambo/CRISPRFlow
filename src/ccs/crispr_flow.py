@@ -156,7 +156,7 @@ with open(crispr_spacer_fna, 'w') as spacer_fa:
 ###---Cluster unique spacers @ 100% identity with CD-HIT-EST---###
 crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers_cluster100.fna' % prefix)
 ###---CD-HIT-EST---###
-cdhit_est_opts = {'-i':crispr_spacers_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
+cdhit_est_opts = {'-i':crispr_spacer_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
 cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
 subprocess.run(cdhit_est_spc_cmd)
 
