@@ -124,19 +124,26 @@ subprocess.run(crispr_detect_cmd, shell=False)
 ###---Read the GFF file produced by CRISPRDetect---###
 crispr_detect_gff = crispr_detect_out + '.gff'
 
-if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
-    #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
-    crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
-else:
-    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
+# if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
+#     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
+#     crispr_gff_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+# else:
+#     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
 ###---Get contigs containing a putative CRISPR array---###
 crispr_contigs = os.path.join(crispr_detect_out, 'contigs_with_crispr.fna')
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     crispr_pullseq_cmd = ['grep','repeat_region',crispr_detect_gff,'|','cut','-f1','|','uniq','|','pullseq','-i',nt_fasta,'-N','>',crispr_contigs]
+    print(crispr_pullseq_cmd)
+    subprocess.run(crispr_pullseq_cmd)
 else:
    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
-subprocess.run(crispr_pullseq_cmd)
+
+
+###---Pull CRISPR spacers into FNA fasta, get clusters @ 99% identity---###
+crispr_spacers_fna = str()
+crispr_spacers_cluster = str()
+'cd-hit-est', '-i', crispr_spacers_fna, '-o', crispr_spacers_cluster, '-c', '1.0', ''
 #==============================================================================
 # ###---Prodigal---###
 """
