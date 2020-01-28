@@ -178,7 +178,7 @@ pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names,
     '>':crispr_contigs}
 pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
 print(pullseq_carray_cmd)
-subprocess.run(pullseq_carray_cmd)
+#subprocess.run(pullseq_carray_cmd)
 
 
 
