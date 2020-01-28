@@ -127,12 +127,22 @@ crispr_detect_gff = crispr_detect_out + '.gff'
 
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
-    crispr_array_coords = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
-    crispr_spacer_coords = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
+    crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+    crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
+    crispr_spacer_df[['ID', 'Name', 'Parent', 'Spacer', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_spacer_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
 else:
     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
-print(crispr_spacer_coords.head())
+#Write the CRISPR spacers to an output nucleotide FASTA
+crispr_spacer_fna = os.path.join(crispr_detect_out, '%s_crispr_spacers.fna' % opts.prefix)
+
+with open(crispr_spacer_fna, 'w') as spacer_fa:
+    for index, row in crispr_spacer_df.head().iterrows():
+        spacer_fa.write('>%s_____%s' % (row['seqid'], row['ID']), '\n', row['Spacer'], '\n')
+
+
+
+
 # ###---Get contigs containing a putative CRISPR array---###
 # crispr_contigs = os.path.join(crispr_detect_out, 'contigs_with_crispr.fna')
 # if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
