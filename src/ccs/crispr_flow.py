@@ -143,7 +143,7 @@ else:
 ###---Pull CRISPR spacers into FNA fasta, get clusters @ 99% identity---###
 crispr_spacers_fna = str()
 crispr_spacers_cluster = str()
-'cd-hit-est', '-i', crispr_spacers_fna, '-o', crispr_spacers_cluster, '-c', '1.0', ''
+cdhit_est_cmd = ['cd-hit-est', '-i', crispr_spacers_fna, '-o', crispr_spacers_cluster, '-c', '1.0', '']
 #==============================================================================
 # ###---Prodigal---###
 """
