@@ -133,7 +133,7 @@ if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0
 
     #Write the CRISPR spacers to an output nucleotide FASTA
     crispr_spacer_fna = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers.fna' % prefix)
-
+    print(crispr_spacer_fna)
     with open(crispr_spacer_fna, 'w') as spacer_fa:
         for index, row in crispr_spacer_df.head().iterrows():
             spacer_fa.write('>%s_____%s' % (row['seqid'], row['ID']), '\n', row['Spacer'], '\n')
