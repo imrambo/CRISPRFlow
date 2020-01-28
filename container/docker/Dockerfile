@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y apt-utils \
     python3-pip \
     python2.7 \
     python-pip \
-    scons \
     git \
     wget \
     hmmer \
@@ -37,10 +36,11 @@ RUN apt-get update && apt-get install -y apt-utils \
     parallel \
     libstdc++6 \
     libgomp1 \
-    vim \
+    libpcre3 \
+    libpcre3-dev \
     && apt-get clean
 
-RUN pip3 install biopython pandas scons python-magic
+RUN pip3 install biopython pandas python-magic
 #------------------------------------------------------------------------------
 RUN mkdir -p /build
 
@@ -63,6 +63,13 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
     && python2.7 setup.py build \
     && python2.7 setup.py test -vv \
     && python2.7 setup.py install
+
+RUN cd /build && git clone https://github.com/bcthomas/pullseq.git \
+    && cd pullseq \
+    && ./bootstrap \
+    && ./configure \
+    && make \
+    && make install
 
 #DIAMOND
 #RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
