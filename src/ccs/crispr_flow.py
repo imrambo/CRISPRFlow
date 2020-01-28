@@ -105,6 +105,7 @@ else:
     pass
 #==============================================================================
 ###---CRISPRDetect---###
+#Pattern for CRISPRDetect output
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '%s_CRISPRDetect')
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 
@@ -124,7 +125,7 @@ crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 
 ###---Read the GFF file produced by CRISPRDetect---###
 crispr_detect_gff = crispr_detect_out + '.gff'
-
+print(crispr_detect_gff)
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
