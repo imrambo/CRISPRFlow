@@ -113,12 +113,12 @@ logger.info('Run CRISPRDetect')
 
 ###---CRISPRDetect---###
 #Pattern for CRISPRDetect output
-crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
+crispr_detect_outpatt = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
 crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
 
 #CRISPRDetect options
 crispr_detect_optdict = {'-f':nt_fasta,
-'-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':20,
+'-o':crispr_detect_outpatt, '-T':opts.threads, '-minimum_repeat_length':20,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
 '-logfile':crispr_detect_log}
 
@@ -128,7 +128,7 @@ crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 #subprocess.run(crispr_detect_cmd, shell=False)
 
 ###---Read the GFF file produced by CRISPRDetect---###
-crispr_detect_gff = crispr_detect_out + '.gff'
+crispr_detect_gff = crispr_detect_outpatt + '.gff'
 
 #if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
 crispr_array_df = pd.DataFrame()
@@ -168,8 +168,8 @@ blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
 #####=====END SPACERS=====#####
 
 #####=====CRISPR ARRAY=====#####
-crispr_contigs = os.path.join(crispr_detect_out, 'crispr_contigs_%s.fna' % prefix)
-crispr_contig_names = os.path.join(crispr_detect_out, 'crispr_contigs_names_%s.txt' % prefix)
+crispr_contigs = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_%s.fna' % prefix)
+crispr_contig_names = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_names_%s.txt' % prefix)
 with open(crispr_contig_names, 'w') as carray_names:
     for seqid in list(set(crispr_array_df['seqid'].tolist())):
         carray_names.write(seqid + '\n')
