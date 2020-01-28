@@ -6,7 +6,7 @@ Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
 
 Thirteen... that's a mighty unlucky number... for somebody!
 """
-version = 'v0.0.1'
+version = 'v1.0.0.0'
 
 from Bio import SeqIO
 import argparse
@@ -103,7 +103,14 @@ if is_gzipped(nt_fasta):
 
 else:
     pass
+
+#Make a SeqIO dictionary of the input nucleotide sequences
+#nt_fasta_seqdict = make_seqdict(nt_fasta, format = 'fasta')
 #==============================================================================
+###---CRISPRDetect---###
+###---Run CRISPRDetect---###
+logger.info('Run CRISPRDetect')
+
 ###---CRISPRDetect---###
 #Pattern for CRISPRDetect output
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
@@ -115,41 +122,68 @@ crispr_detect_optdict = {'-f':nt_fasta,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
 '-logfile':crispr_detect_log}
 
-###---Run CRISPRDetect---###
-logger.info('Run CRISPRDetect')
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
-
 #subprocess.run(crispr_detect_cmd, shell=False)
 
 ###---Read the GFF file produced by CRISPRDetect---###
 crispr_detect_gff = crispr_detect_out + '.gff'
-print(crispr_detect_gff)
-if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
+
+#if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
+crispr_array_df = pd.DataFrame()
+crispr_spacer_df = pd.DataFrame()
+
+try:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+    #Select entries for spacers
     crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
+    #Split up attributes for spacers into new columns
     crispr_spacer_df[['ID', 'Name', 'Parent', 'Spacer', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_spacer_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
-
-    #Write the CRISPR spacers to an output nucleotide FASTA
-    crispr_spacer_fna = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers.fna' % prefix)
-    print(crispr_spacer_fna)
-    with open(crispr_spacer_fna, 'w') as spacer_fa:
-        print('writing spacers to %s' % crispr_spacer_fna)
-        for index, row in crispr_spacer_df.iterrows():
-            spacer_fasta_record = '>%s_____%s' % (row['seqid'], row['ID']) + '\n' + row['Spacer'] + '\n'
-            spacer_fa.write(spacer_fasta_record)
-else:
+except FileNotFoundError:
     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
+#####=====SPACERS=====#####
+#Write the CRISPR spacers to an output nucleotide FASTA
+crispr_spacer_fna = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers.fna' % prefix)
+with open(crispr_spacer_fna, 'w') as spacer_fa:
+    logger.info('writing spacers to %s' % crispr_spacer_fna)
+    for index, row in crispr_spacer_df.iterrows():
+        spacer_fasta_record = '>%s_____%s' % (row['seqid'], row['ID']) + '\n' + row['Spacer'] + '\n'
+        spacer_fa.write(spacer_fasta_record)
 
+###---Cluster unique spacers @ 100% identity with CD-HIT-EST---###
+crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers_cluster100.fna' % prefix)
+###---CD-HIT-EST---###
+cdhit_est_opts = {'-i':crispr_spacers_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
+cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
+subprocess.run(cdhit_est_spc_cmd)
 
+###---BLASTN (short sequence task) spacers against viral database---###
+blastn_short_opts = {'-task':'blastn-short', '-query':crispr_spacers_cluster,
+    '-db':'viral_sequences', '-outfmt':"'6 std qlen slen'", '-out':'blasnout',
+    '-evalue':'1.0e-04', '-perc_identity':'90'}
+blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
+#####=====END SPACERS=====#####
+
+#####=====CRISPR ARRAY=====#####
+crispr_contigs = os.path.join(crispr_detect_out, 'crispr_contigs_%s.fna' % prefix)
+crispr_contig_names = os.path.join(crispr_detect_out, 'crispr_contigs_names_%s.txt' % prefix)
+with open(crispr_contig_names, 'w') as carray_names:
+    for seqid in list(set(crispr_array_df['seqid'].tolist())):
+        carray_names.write(seqid + '\n')
+
+pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names,
+    '>':crispr_contigs}
+pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
+
+subprocess.run(pullseq_carray_cmd)
 
 
 
 # ###---Get contigs containing a putative CRISPR array---###
-# crispr_contigs = os.path.join(crispr_detect_out, 'contigs_with_crispr.fna')
+#
 # if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
 #     crispr_pullseq_cmd = ['grep','repeat_region',crispr_detect_gff,'|','cut','-f1','|','uniq','|','pullseq','-i',nt_fasta,'-N','>',crispr_contigs]
 #     print(crispr_pullseq_cmd)
@@ -158,11 +192,7 @@ else:
 #    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 #
 #
-# ###---Pull CRISPR spacers into FNA fasta, get clusters @ 100% identity---###
-# crispr_spacers_fna = str()
-# crispr_spacers_cluster = str()
-# cdhit_est_opts = {'-i':crispr_spacers_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
-# cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
+
 # #==============================================================================
 # # ###---Prodigal---###
 # """
