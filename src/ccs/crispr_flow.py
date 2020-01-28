@@ -25,13 +25,6 @@ from shell_tools import *
 from gff3 import gff3_to_pddf
 from gene_clusters import *
 #==============================================================================
-# def scons_command(targets, sources, command, env='env'):
-#     """Create a Command builder for SCons"""
-#     COMMAND = '%s.Command(["%s"], ["%s"], "%s")\n' % (env, '","'.join(targets), '",'.join(sources), command)
-#     return COMMAND
-#==============================================================================
-build_root = '../..'
-#==============================================================================
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--fasta', type=str, dest='fasta_file', action='store',
@@ -40,15 +33,11 @@ parser.add_argument('--out_root', type=str, dest='out_root', action='store',
 help='root output directory. Required.')
 parser.add_argument('--tmp_dir', type=str, dest='tmp_dir', action='store',
 default='/tmp',
-help='temporary file directory.')
+help='temporary file directory. Default = /tmp')
 parser.add_argument('--threads', type=int, dest='threads', action='store', default=1,
-help='number of threads for each command')
+help='number of threads for each command. Default = 1')
 parser.add_argument('--jobs', type=int, dest='jobs', action='store', default=1,
 help='number of jobs for each step')
-# parser.add_argument('--crispr_gff', type=str, dest='crispr_gff', action='store', nargs='?',
-# help='CRISPRDetect GFF file. If supplied, CRISPRDetect will not be run.')
-# parser.add_argument('--prodigal_amino', type=str, dest='prodigal_amino', action='store', nargs='?',
-# help='Prodigal amino acid file. Optional. If supplied, Prodigal will not be run.')
 parser.add_argument('--window_extent', type=int, dest='window_extent', action='store', default=10000,
 help='Number of bp extension to include in a cluster. Default = 10kb.')
 parser.add_argument('--joblog', type=str, dest='joblog', action='store',
@@ -62,9 +51,9 @@ help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typi
 parser.add_argument('--profile_suffix', type=str, dest='profile_suffix', action='store', default='.hmm',
 help='suffix for HMM gene profiles. Default is ".hmm"')
 parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='?',
-help='optional prefix for output files. Uses the input nt fasta basename if not supplied.')
+help='optional prefix for output files. Uses the input nucleotide fasta basename if not supplied.')
 opts = parser.parse_args()
-
+#==============================================================================
 #Set up logger
 logging_format = '%(levelname)s %(asctime)s - $(message)s'
 if opts.joblog:
@@ -91,11 +80,6 @@ for key, value in output_paths.items():
         os.makedirs(value)
     else:
         pass
-
-# #Output SConstruct to rebuild the analysis
-# sconstruct_handle = os.path.join(output_paths['SCons'], 'SConstruct')
-# SConstruct = open(sconstruct_handle, 'w')
-# SConstruct.write('env = Environment()\n')
 #==============================================================================
 #Options for GNU parallel
 parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
@@ -103,12 +87,12 @@ parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 nt_fasta = opts.fasta_file
 #Get the file basename to name output files
 nt_fasta_basename = get_basename(nt_fasta)
-
+#If --prefix is not set, use the name of the nucleotide fasta
 prefix = opts.prefix
 if not prefix:
     prefix = nt_fasta_basename
-
-#If the nucleotide fasta input is gzipped, gunzip it
+#==============================================================================
+#If the nucleotide fasta input is gzipped, gunzip it for use with CRISPRDetect
 gzip = False
 if is_gzipped(nt_fasta):
     gzip = True
@@ -121,21 +105,24 @@ else:
 #==============================================================================
 ###---CRISPRDetect---###
 crispr_detect_out = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
-#crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
+crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
+
 #CRISPRDetect options
 crispr_detect_optdict = {'-f':nt_fasta,
 '-o':crispr_detect_out, '-T':opts.threads, '-minimum_repeat_length':20,
-'-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir}
- #'-logfile':crispr_detect_log}
+'-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
+'-logfile':crispr_detect_log}
 
 ###---Run CRISPRDetect---###
-logger.debug('Run CRISPRDetect')
+logger.info('Run CRISPRDetect')
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_optlist = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 
-# subprocess.run(crispr_detect_optlist, shell=False)
-# crispr_detect_gff = crispr_detect_out + '.gff'
+subprocess.run(crispr_detect_optlist, shell=False)
+
+###---Read the GFF file produced by CRISPRDetect---###
+crispr_detect_gff = crispr_detect_out + '.gff'
 
 if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
@@ -143,51 +130,41 @@ if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0
 else:
     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
-# #Write the CRISPRDetect command to SConstruct Command builder
-# CRISPR_SOURCES = [nt_fasta]
-# CRISPR_TARGETS = [os.path.abspath(os.path.join(root, filename)) for root, dirnames, filenames in os.walk(output_paths['CRISPRDetect']) for filename in filenames]
-# #CRISPR_TARGETS.insert(0, CRISPR_TARGETS.pop(CRISPR_TARGETS.index(crispr_detect_log)))
-# CRISPR_OPTS = crispr_detect_optdict
-# #CRISPR_OPTS['-logfile'] = '${TARGETS}[0]'
-# CRISPR_OPTS['-f'] = '$SOURCE'
-# CRISPR_COMMAND = ' '.join(exec_cmd_generate(crispr_detect_exec, CRISPR_OPTS))
-#
-# CRISPR_CMDBLD = scons_command(targets = CRISPR_TARGETS, sources = CRISPR_SOURCES, command = CRISPR_COMMAND)
-# SConstruct.write(CRISPR_CMDBLD + '\n')
+
 #==============================================================================
 # ###---Prodigal---###
 prodigal_outfmt = 'gff'
 prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
 prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
-prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
-
-prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt}
-
-#Generate and run the Prodigal command
-prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
-outfmt=prodigal_outfmt, prodigal='prodigal')
-
-logger.debug('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
-
-subprocess.run(prodigal_command[0], shell=False)
-
-if os.path.exists(prodigal_out):
-    if os.stat(prodigal_out).st_size != 0:
-        prodigal_gff_df = gff3_to_pddf(gff = prodigal_out, ftype = 'CDS', index_col=False)
-    else:
-        logger.error('Prodigal GFF %s is empty' % prodigal_out)
-else:
-    logger.error('Prodigal GFF output %s does not exist' % prodigal_out)
-
-
-if os.path.exists(prodigal_aa):
-    if os.stat(prodigal_aa).st_size != 0:
-         prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
-
-    else:
-        logger.error('Prodigal amino acid fasta %s is empty' % prodigal_aa)
-else:
-    logger.error('Prodigal amino acid fasta %s does not exist' % prodigal_aa)
+#prodigal_nt = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.fna')
+#
+# prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-d':prodigal_nt, '-p':'normal'}
+#
+# #Generate and run the Prodigal command
+# prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
+# outfmt=prodigal_outfmt, prodigal='prodigal')
+#
+# logger.debug('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
+#
+# subprocess.run(prodigal_command[0], shell=False)
+#
+# if os.path.exists(prodigal_out):
+#     if os.stat(prodigal_out).st_size != 0:
+#         prodigal_gff_df = gff3_to_pddf(gff = prodigal_out, ftype = 'CDS', index_col=False)
+#     else:
+#         logger.error('Prodigal GFF %s is empty' % prodigal_out)
+# else:
+#     logger.error('Prodigal GFF output %s does not exist' % prodigal_out)
+#
+#
+# if os.path.exists(prodigal_aa):
+#     if os.stat(prodigal_aa).st_size != 0:
+#          prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
+#
+#     else:
+#         logger.error('Prodigal amino acid fasta %s is empty' % prodigal_aa)
+# else:
+#     logger.error('Prodigal amino acid fasta %s does not exist' % prodigal_aa)
 
 # PRODIGAL_SOURCES = [nt_fasta]
 # PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
@@ -244,7 +221,3 @@ neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_gff_df, gene_gff_df
 #     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
 
 #SConstruct.close()
-if gzip:
-    subprocess.run(['gzip', nt_fasta], shell=False)
-else:
-    pass
