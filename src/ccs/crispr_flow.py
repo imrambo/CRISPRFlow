@@ -174,12 +174,14 @@ with open(crispr_contig_names, 'w') as carray_names:
     for seqid in list(set(crispr_array_df['seqid'].tolist())):
         carray_names.write(seqid + '\n')
 
-pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names,
-    '>':crispr_contigs}
+pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names}
 pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
 print(pullseq_carray_cmd)
-#subprocess.run(pullseq_carray_cmd)
-
+try:
+    with open(crispr_contigs, 'w') as crisprcont:
+        subprocess.run(pullseq_carray_cmd, stdout=crisprcont)
+except FileNotFoundError:
+    logging.error('cannot write CRISPR-containing contigs to file %s' % crispr_contigs)
 
 
 # ###---Get contigs containing a putative CRISPR array---###
