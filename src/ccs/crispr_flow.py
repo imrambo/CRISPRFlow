@@ -52,6 +52,7 @@ parser.add_argument('--profile_suffix', type=str, dest='profile_suffix', action=
 help='suffix for HMM gene profiles. Default is ".hmm"')
 parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='?',
 help='optional prefix for output files. Uses the input nucleotide fasta basename if not supplied.')
+
 opts = parser.parse_args()
 #==============================================================================
 #Set up logger
@@ -140,10 +141,11 @@ else:
    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
 
-###---Pull CRISPR spacers into FNA fasta, get clusters @ 99% identity---###
+###---Pull CRISPR spacers into FNA fasta, get clusters @ 100% identity---###
 crispr_spacers_fna = str()
 crispr_spacers_cluster = str()
-cdhit_est_cmd = ['cd-hit-est', '-i', crispr_spacers_fna, '-o', crispr_spacers_cluster, '-c', '1.0', '']
+cdhit_est_opts = {'-i':crispr_spacers_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
+cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
 #==============================================================================
 # ###---Prodigal---###
 """
@@ -153,11 +155,24 @@ prodigal_outfmt = 'gff'
 prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
 prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 
-prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'normal', '-i':crispr_contigs}
+prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
 #Generate and run the Prodigal command
 prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
 #==============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #
 # #Generate and run the Prodigal command
