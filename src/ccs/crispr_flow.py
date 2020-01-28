@@ -137,7 +137,7 @@ if os.path.exists(crispr_detect_gff) and os.stat(crispr_detect_gff).st_size != 0
     print(crispr_spacer_fna)
     with open(crispr_spacer_fna, 'w') as spacer_fa:
         print('writing spacers to %s' % crispr_spacer_fna)
-        for index, row in crispr_spacer_df.head().iterrows():
+        for index, row in crispr_spacer_df.iterrows():
             spacer_fasta_record = '>%s_____%s' % (row['seqid'], row['ID']) + '\n' + row['Spacer'] + '\n'
             spacer_fa.write(spacer_fasta_record)
 else:
