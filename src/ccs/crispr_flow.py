@@ -25,7 +25,6 @@ from shell_tools import *
 from gff3 import gff3_to_pddf
 from gene_clusters import *
 from collections import defaultdict
-import shutil
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -54,6 +53,8 @@ parser.add_argument('--profile_suffix', type=str, dest='profile_suffix', action=
 help='suffix for HMM gene profiles. Default is ".hmm"')
 parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='?',
 help='optional prefix for output files. Uses the input nucleotide fasta basename if not supplied.')
+parser.add_argument('--prodigal_mode', type=str, dest='prodigal_mode', action='store', nargs='1',
+default = 'single', help='Prodigal 2.6.3 search mode - choose "single" or "meta"')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -126,6 +127,7 @@ crispr_detect_optdict = {'-f':nt_fasta,
 '-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
 '-logfile':crispr_detect_log}
 
+#Path to CRISPRDetect executable
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
@@ -210,24 +212,19 @@ prodigal_outfmt = 'gff'
 prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
 prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 
-#prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
 prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':nt_fasta}
 
 #Generate and run the Prodigal command
 prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
 
-#gff_cols = ['seqid', 'source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
-#prodigal_df = pd.read_csv(prodigal_out, sep='\s+', names=gff_cols, comment='#', index_col=False, skiprows=0)
-#prodigal_df = prodigal_df[prodigal_df['ftype'] == 'CDS']
 
-prodigal_aa_dict = defaultdict(str)
+prodigal_aa_dict = dict()
 
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
-
-###---Fetch the CRISPR-neighboring genes---###
+###---Fetch the CRISPR-proximal ORFs---###
 #Loop through the CRISPR array DataFrame and pull out Prodigal ORF entries
 #that fall within the window coordinate extent
 cluster_seq_paths = []
@@ -247,16 +244,12 @@ for index, row in crispr_array_df.iterrows():
     with open(cluster_seqs, 'w') as clustseq:
         print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
         SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
-    #contig_orfs = [prodigal_aa_dict[key] for key in prodigal_aa_dict.keys() if re.match(pattern, key) and [int(coord.strip()) for coord in prodigal_aa_dict[key].description.split('#')[1:3]]
-    #Pull the ORF coordinates
+    
 
 ###---END Prodigal---###
 #==============================================================================
 ###---BEGIN MacSyFinder---###
 #(Sub)type the groups of CRISPR-neighboring genes
-if os.path.isdir(output_paths['MacSyFinder']):
-    print('directory exists and is not empty - overwriting for MacSyFinder run')
-    shutil.rmtree(output_paths['MacSyFinder'])
 macsyfinder_opts = {'--db-type':'ordered_replicon',
 '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
 '--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
