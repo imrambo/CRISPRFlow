@@ -235,7 +235,6 @@ for index, row in crispr_array_df.iterrows():
             orf_coord = [int(a.strip()) for a in prodigal_aa_dict[orfid].description.split('#')[1:3]]
             if orf_coord[0] >= row['start'] - opts.window_extent or orf_coord[1] <= row['end'] + opts.window_extent:
                 cluster_orfs.append(prodigal_aa_dict[orfid])
-    cluster_dict[row['ID']] = cluster_orfs
     #write FASTA amino acid file of translated ORFs within window extent of CRISPR
     cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_orfclust_%d.faa' % (row['ID'], opts.window_extent))
     cluster_seq_paths.append(cluster_seqs)
