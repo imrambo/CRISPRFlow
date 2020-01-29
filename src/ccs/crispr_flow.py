@@ -237,7 +237,7 @@ for index, row in crispr_array_df.iterrows():
             if orf_coord[0] >= int(row['start']) - opts.window_extent or orf_coord[1] <= int(row['end']) + opts.window_extent:
                 cluster_orfs.append(prodigal_aa_dict[orfid])
     #write FASTA amino acid file of translated ORFs within window extent of CRISPR
-    cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_orfclust_%d.faa' % (row['ID'], opts.window_extent))
+    cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_%s_orfclust_%d.faa' % (row['seqid'], row['ID'], opts.window_extent))
     cluster_seq_paths.append(cluster_seqs)
     with open(cluster_seqs, 'w') as clustseq:
         SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
@@ -260,7 +260,7 @@ for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence_db'] = csp
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
     print(macsyfinder_cmd)
-    #subprocess.run(macsyfinder_cmd, shell=False)
+    subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
 ###---END MacSyFinder---###
 #==============================================================================
