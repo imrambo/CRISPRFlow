@@ -129,7 +129,7 @@ crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 #Run CRISPRDetect
-#subprocess.run(crispr_detect_cmd, shell=False)
+subprocess.run(crispr_detect_cmd, shell=False)
 
 ###---Read the GFF file produced by CRISPRDetect---###
 crispr_detect_gff = crispr_detect_outpatt + '.gff'
