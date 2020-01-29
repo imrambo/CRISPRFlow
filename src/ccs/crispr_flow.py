@@ -206,7 +206,7 @@ prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
 
 gff_cols = ['seqid', 'source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
-prodigal_df = pd.read_csv(prodigal_out, sep='\s+', names=gff_cols, comment='#', index_col=index_col, skiprows=0)
+prodigal_df = pd.read_csv(prodigal_out, sep='\s+', names=gff_cols, comment='#', index_col=False, skiprows=0)
 prodigal_df = prodigal_df[prodigal_df['ftype'] == 'CDS']
 prodigal_aa_dict = defaultdict(str)
 
