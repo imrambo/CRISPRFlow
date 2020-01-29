@@ -266,7 +266,10 @@ for csp in cluster_seq_paths:
     logger.info('Typing with MacSyFinder performed for %s' % csp)
 ###---END MacSyFinder---###
 #==============================================================================
-subprocess.run(['gzip', nt_fasta], shell=False)
+#Compress the input
+if str(opts.fasta_file).endswith('.gz'):
+    print('re-gzip compressing file %s' % opts.fasta_file)
+    subprocess.run(['gzip', nt_fasta], shell=False)
 
 
 
