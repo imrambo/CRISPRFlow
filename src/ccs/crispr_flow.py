@@ -139,7 +139,7 @@ try:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
     #Split up attributes for CRISPR arrays into new columns
-    crispr_array_df[['ID', 'Name', 'Parent', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
+    #crispr_array_df[['ID', 'Name', 'Parent', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
     #Select entries for spacers
     crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
     #Split up attributes for CRISPR spacers into new columns
