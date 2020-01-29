@@ -7,19 +7,15 @@ Author: Ian Rambo
 Thirteen... that's a mighty unlucky number... for somebody!
 """
 #------------------------------------------------------------------------------
-def gff3_to_pddf(gff, skiprows=None, ftype='', index_col=False):
+def gff3_to_pddf(gff, ftype='', index_col=False):
     import numpy as np
     import pandas as pd
     import os
     """Read in a GFF3 file as a Pandas data frame. Specify ftype to select
     rows pertaining to a specific feature type."""
     gff_cols = ['seqid', 'source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
-    gff_df = pd.DataFrame()
     if os.path.exists(gff) and os.stat(gff).st_size != 0:
-        if skiprows:
-            gff_df = pd.read_csv(gff, sep='\s+', names=gff_cols, comment='#', index_col=index_col, skiprows=skiprows)
-        else:
-            gff_df = pd.read_csv(gff, sep='\s+', names=gff_cols, comment='#', index_col=index_col)
+        gff_df = pd.read_csv(gff, sep='\s+', names=gff_cols, comment='#', index_col=index_col)
 
         if ftype:
             gff_df = gff_df[gff_df['ftype'] == ftype]
