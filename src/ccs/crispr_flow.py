@@ -20,10 +20,11 @@ import gzip
 import re
 from datetime import datetime
 from hmmbo import *
-from prodigal import *
+#from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
 from gene_clusters import *
+from collections import defaultdict
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -201,11 +202,22 @@ prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr
 #Generate and run the Prodigal command
 prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
+
+prodigal_df = gff3_to_pddf(gff = prodigal_out, ftype = 'CDS', index_col=False)
+prodigal_aa_dict = defaultdict(str)
+
+if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
+    prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
+###---END Prodigal---###
 #==============================================================================
+###---Fetch the CRISPR-neighboring genes---###
+neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
+
+#neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
+neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_array_df, gene_gff_df=prodigal_gff_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
 
 
-
-
+print(neighbor_gene_clusters)
 
 
 
