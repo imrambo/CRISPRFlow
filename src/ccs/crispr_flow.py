@@ -261,6 +261,7 @@ for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence-db'] = csp
     macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, get_basename(csp)))
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
+    macsyfinder_cmd.append('all')
     print(macsyfinder_cmd)
     subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
