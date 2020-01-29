@@ -259,14 +259,14 @@ macsyfinder_opts = {'--db-type':'ordered_replicon',
 
 for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence-db'] = csp
-    macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], prefix)
+    macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, get_basename(csp)))
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
     print(macsyfinder_cmd)
     subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
 ###---END MacSyFinder---###
 #==============================================================================
-#Compress the input
+#Compress the input if it was gzipped originally
 if str(opts.fasta_file).endswith('.gz'):
     print('re-gzip compressing file %s' % opts.fasta_file)
     subprocess.run(['gzip', nt_fasta], shell=False)
