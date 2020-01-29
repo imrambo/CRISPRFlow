@@ -26,7 +26,6 @@ from gff3 import gff3_to_pddf
 from gene_clusters import *
 from collections import defaultdict
 #==============================================================================
-build_root =
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--fasta', type=str, dest='fasta_file', action='store',
