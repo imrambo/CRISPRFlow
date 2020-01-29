@@ -256,12 +256,6 @@ macsyfinder_opts = {'--db_type':'ordered_replicon',
 '--profile-suffix':'hmm', '--profile-dir':'../../data/profiles/CAS',
 '--worker':opts.threads, '-vv':''}
 
-#Add macsyfinder joblog
-if opts.joblog_dir:
-    macsyfinder_opts['--log'] = opts.joblog_dir
-else:
-    macsyfinder_opts['--log'] = output_paths['MacSyFinder']
-
 for cs in cluster_seqs:
     macsyfinder_opts['--sequence_db'] = cs
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
