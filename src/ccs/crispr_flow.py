@@ -216,6 +216,7 @@ if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
 print(prodigal_aa_dict.keys())
+print(crispr_contig_ids)
 ###---END Prodigal---###
 #==============================================================================
 ###---Fetch the CRISPR-neighboring genes---###
