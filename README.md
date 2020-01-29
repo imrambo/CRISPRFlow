@@ -18,4 +18,4 @@ Prodigal
 GNU Parallel
 HMMER
 CRISPRCasFinder group (DEF and profiles)
-Banfield group (Cas14)
+Banfield group (Cas14 sequences for HMM)
