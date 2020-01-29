@@ -7,7 +7,7 @@ Author: Ian Rambo
 Thirteen... that's a mighty unlucky number... for somebody!
 """
 #------------------------------------------------------------------------------
-def gff3_to_pddf(gff, skiprows, ftype='', index_col=False):
+def gff3_to_pddf(gff, skiprows=None, ftype='', index_col=False):
     import numpy as np
     import pandas as pd
     import os
