@@ -213,13 +213,13 @@ if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
 ###---END Prodigal---###
 #==============================================================================
 ###---Fetch the CRISPR-neighboring genes---###
-neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
-
-#neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_array_df, gene_gff_df=prodigal_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
-
-
-print(neighbor_gene_clusters)
+# neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
+# 
+# #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
+# neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_array_df, gene_gff_df=prodigal_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
+#
+#
+# print(neighbor_gene_clusters)
 
 
 
