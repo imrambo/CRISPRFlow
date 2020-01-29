@@ -257,7 +257,7 @@ macsyfinder_opts = {'--db_type':'ordered_replicon',
 '--worker':opts.threads, '-vv':''}
 
 for csp in cluster_seq_paths:
-    macsyfinder_opts['--sequence_db'] = csp
+    macsyfinder_opts['--sequence-db'] = csp
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
     print(macsyfinder_cmd)
     subprocess.run(macsyfinder_cmd, shell=False)
