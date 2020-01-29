@@ -257,13 +257,14 @@ if os.path.isdir(output_paths['MacSyFinder']):
     shutil.rmtree(output_paths['MacSyFinder'])
 macsyfinder_opts = {'--db-type':'ordered_replicon',
 '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
-'--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
+'--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'hmm', '--profile-dir':'/build/CRISPRFlow/data/profiles/CAS',
 '--worker':opts.threads, '-vv':''}
 
 for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence-db'] = csp
+    macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], prefix)
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
     print(macsyfinder_cmd)
     subprocess.run(macsyfinder_cmd, shell=False)
