@@ -53,8 +53,8 @@ parser.add_argument('--profile_suffix', type=str, dest='profile_suffix', action=
 help='suffix for HMM gene profiles. Default is ".hmm"')
 parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='?',
 help='optional prefix for output files. Uses the input nucleotide fasta basename if not supplied.')
-parser.add_argument('--prodigal_mode', type=str, dest='prodigal_mode', action='store', nargs='1',
-default = 'single', help='Prodigal 2.6.3 search mode - choose "single" or "meta"')
+parser.add_argument('--prodigal_mode', type=str, dest='prodigal_mode', action='store',
+default='single', help='Prodigal 2.6.3 search mode - choose single or meta')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -212,7 +212,7 @@ prodigal_outfmt = 'gff'
 prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
 prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 
-prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':nt_fasta}
+prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':opts.prodigal_mode, '-i':nt_fasta}
 
 #Generate and run the Prodigal command
 prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
@@ -244,7 +244,7 @@ for index, row in crispr_array_df.iterrows():
     with open(cluster_seqs, 'w') as clustseq:
         print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
         SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
-    
+
 
 ###---END Prodigal---###
 #==============================================================================
