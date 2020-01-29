@@ -55,6 +55,8 @@ parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='
 help='optional prefix for output files. Uses the input nucleotide fasta basename if not supplied.')
 parser.add_argument('--prodigal_mode', type=str, dest='prodigal_mode', action='store',
 default='single', help='Prodigal 2.6.3 search mode - choose single or meta')
+parser.add_argument('--macsy_dbtype', type=str, dest='macsy_dbtype', action='store',
+default='ordered_replicon', help='Specify dataset type for MacSyFinder. [unordered_replicon, unordered, ordered_replicon, gembase]')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -250,19 +252,21 @@ for index, row in crispr_array_df.iterrows():
 #==============================================================================
 ###---BEGIN MacSyFinder---###
 #(Sub)type the groups of CRISPR-neighboring genes
-macsyfinder_opts = {'--db-type':'ordered_replicon',
+macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
 '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
 '--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'.hmm', '--profile-dir':'/build/CRISPRFlow/data/profiles/CAS',
-'--worker':opts.threads, '-vv':''}
+'--worker':opts.threads}
 
 for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence-db'] = csp
     macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, get_basename(csp)))
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
+    #Search all the CRISPR-Cas (sub)types
     macsyfinder_cmd.append('all')
     print(macsyfinder_cmd)
+    #Run MacSyFinder
     subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
 ###---END MacSyFinder---###
