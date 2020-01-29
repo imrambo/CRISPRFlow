@@ -254,7 +254,7 @@ macsyfinder_opts = {'--db-type':'ordered_replicon',
 '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
 '--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-'--profile-suffix':'hmm', '--profile-dir':'/build/CRISPRFlow/data/profiles/CAS',
+'--profile-suffix':'.hmm', '--profile-dir':'/build/CRISPRFlow/data/profiles/CAS',
 '--worker':opts.threads, '-vv':''}
 
 for csp in cluster_seq_paths:
