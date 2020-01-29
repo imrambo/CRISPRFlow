@@ -215,7 +215,7 @@ prodigal_aa_dict = defaultdict(str)
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
-print(prodigal_aa_dict['NZ_KB890278.1_35'].description.split('#')[0:3])
+print(prodigal_aa_dict['NZ_KB890278.1_35'].description.split('#')[1:3])
 
 ###---END Prodigal---###
 #==============================================================================
