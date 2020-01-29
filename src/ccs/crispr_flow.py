@@ -26,6 +26,7 @@ from gff3 import gff3_to_pddf
 from gene_clusters import *
 from collections import defaultdict
 #==============================================================================
+build_root =
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--fasta', type=str, dest='fasta_file', action='store',
@@ -75,7 +76,7 @@ if opts.jobs < 1:
     logger.warning('--jobs must be >= 1')
 #==============================================================================
 #Create the output directories
-output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER']}
+output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER','Cluster']}
 
 for key, value in output_paths.items():
     if not os.path.exists(value):
@@ -84,7 +85,7 @@ for key, value in output_paths.items():
         pass
 #==============================================================================
 #Options for GNU parallel
-parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
+#parallel_optdict = {'--jobs':opts.jobs, '--bar':''}
 
 nt_fasta = opts.fasta_file
 #Get the file basename to name output files
@@ -138,10 +139,13 @@ crispr_spacer_df = pd.DataFrame()
 try:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+    #Split up attributes for CRISPR arrays into new columns
+    crispr_array_df[['ID', 'Name', 'Parent', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
     #Select entries for spacers
     crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
-    #Split up attributes for spacers into new columns
+    #Split up attributes for CRISPR spacers into new columns
     crispr_spacer_df[['ID', 'Name', 'Parent', 'Spacer', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_spacer_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
+
 except FileNotFoundError:
     logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
@@ -170,7 +174,7 @@ blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
 
 #####=====CRISPR ARRAY=====#####
 #List of contigs containing a CRISPR array
-crispr_contig_ids = list(set(crispr_array_df['seqid'].tolist()))
+#crispr_contig_ids = list(set(crispr_array_df['seqid'].tolist()))
 
 # crispr_contigs = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_%s.fna' % prefix)
 # crispr_contig_names = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_names_%s.txt' % prefix)
@@ -217,15 +221,56 @@ prodigal_aa_dict = defaultdict(str)
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
-print(crispr_array_df.head())
-# for crisprcont in crispr_contig_ids:
-#     contig_orfs = [prodigal_aa_dict[key] for key in prodigal_aa_dict.keys() if key.startswith(crisprcont) and re.match(r'.*?_\d+$', key)]
-#     #Pull the ORF coordinates
-#     orf_coord = [int(a.strip()) for a in prodigal_aa_dict['NZ_KB890278.1_35'].description.split('#')[1:3]]
+
+###---Fetch the CRISPR-neighboring genes---###
+#Loop through the CRISPR array DataFrame and pull out Prodigal ORF entries
+#that fall within the window coordinate extent
+cluster_seq_paths = []
+for index, row in crispr_array_df.iterrows():
+    cluster_orfs = []
+    seqid = re.escape(row['seqid'])
+    pattern = r'%s_\d+$' % seqid
+    #Are ORFs within range of the CRISPR array? If so, gather them.
+    for orfid in prodigal_aa_dict.keys():
+        if re.match(pattern, orfid):
+            orf_coord = [int(a.strip()) for a in prodigal_aa_dict[orfid].description.split('#')[1:3]]
+            if orf_coord[0] >= row['start'] - opts.window_extent or orf_coord[1] <= row['end'] + opts.window_extent:
+                cluster_orfs.append(prodigal_aa_dict[orfid])
+    cluster_dict[row['ID']] = cluster_orfs
+    #write FASTA amino acid file of translated ORFs within window extent of CRISPR
+    cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_orfclust_%d.faa' % (row['ID'], opts.window_extent))
+    cluster_seq_paths.append(cluster_seqs)
+    with open(cluster_seqs, 'w') as clustseq:
+        SeqIO.write(cluster_seqs, cluster_orfs, 'fasta')
+    #contig_orfs = [prodigal_aa_dict[key] for key in prodigal_aa_dict.keys() if re.match(pattern, key) and [int(coord.strip()) for coord in prodigal_aa_dict[key].description.split('#')[1:3]]
+    #Pull the ORF coordinates
 
 ###---END Prodigal---###
 #==============================================================================
-###---Fetch the CRISPR-neighboring genes---###
+###---BEGIN MacSyFinder---###
+#(Sub)type the groups of CRISPR-neighboring genes
+
+macsyfinder_opts = {'--db_type':'ordered_replicon',
+'--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
+'--def':'../../data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
+'--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
+'--profile-suffix':'hmm', '--profile-dir':'../../data/profiles/CAS',
+'--worker':opts.threads, '-vv':''}
+
+#Add macsyfinder joblog
+if opts.joblog_dir:
+    macsyfinder_opts['--log'] = opts.joblog_dir
+else:
+    macsyfinder_opts['--log'] = output_paths['MacSyFinder']
+
+for cs in cluster_seqs:
+    macsyfinder_opts['--sequence_db'] = cs
+    macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
+    subprocess.run([macsyfinder_cmd, 'all'], shell=False)
+    logger.info('Typing with MacSyFinder performed for %s' % cs)
+###---END MacSyFinder---###
+#==============================================================================
+
 # neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #
 # #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
@@ -234,6 +279,12 @@ print(crispr_array_df.head())
 #
 # print(neighbor_gene_clusters)
 
+#
+
+#
+# macsyfinder_command = 'macsyfinder %s %s' % (optstring_join(macsyfinder_opts), 'all')
+# print(macsyfinder_command)
+# #subprocess.run([macsyfinder_command])
 
 
 
@@ -291,22 +342,7 @@ print(crispr_array_df.head())
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
 #neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_gff_df, gene_gff_df=prodigal_gff_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
 #==============================================================================
-# #Subtype the groups of CRISPR-neighboring genes
-# macsyfinder_opts = {'--sequence_db':neighbor_aa_fasta, '--db_type':'ordered_replicon',
-# '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
-# '--def':'%s/data/definitions/%s' % (build_root, opts.ccs_typing), '--out-dir':output_paths['MacSyFinder'],
-# '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-# '--profile-suffix':'hmm', '--profile-dir':'%s/data/profiles/CAS' % build_root,
-# '--worker':opts.threads, '-vv':''}
-#
-# if opts.joblog_dir:
-#     macsyfinder_opts['--log'] = opts.joblog_dir
-# else:
-#     macsyfinder_opts['--log'] = output_paths['MacSyFinder']
-#
-# macsyfinder_command = 'macsyfinder %s %s' % (optstring_join(macsyfinder_opts), 'all')
-# print(macsyfinder_command)
-# #subprocess.run([macsyfinder_command])
+
 # #==============================================================================
 # ##---HMMSEARCH---###
 # hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42, '--cpu':1}
