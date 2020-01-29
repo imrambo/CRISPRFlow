@@ -254,11 +254,12 @@ macsyfinder_opts = {'--db_type':'ordered_replicon',
 '--def':'../../data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'hmm', '--profile-dir':'../../data/profiles/CAS',
-'--worker':opts.threads, '-vv':'', 'all':''}
+'--worker':opts.threads, '-vv':''}
 
 for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence_db'] = csp
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
+    macsyfinder_cmd.append('all')
     print(macsyfinder_cmd)
     subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
