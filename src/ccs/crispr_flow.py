@@ -114,8 +114,8 @@ logger.info('Run CRISPRDetect')
 
 ###---CRISPRDetect---###
 #Pattern for CRISPRDetect output
-crispr_detect_outpatt = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect')
-crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], nt_fasta_basename + '_CRISPRDetect.log')
+crispr_detect_outpatt = os.path.join(output_paths['CRISPRDetect'], prefix + '_CRISPRDetect')
+crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], prefix + '_CRISPRDetect.log')
 
 #CRISPRDetect options
 crispr_detect_optdict = {'-f':nt_fasta,
@@ -169,24 +169,24 @@ blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
 #####=====END SPACERS=====#####
 
 #####=====CRISPR ARRAY=====#####
-crispr_contigs = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_%s.fna' % prefix)
-crispr_contig_names = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_names_%s.txt' % prefix)
-with open(crispr_contig_names, 'w') as carray_names:
-    for seqid in list(set(crispr_array_df['seqid'].tolist())):
-        carray_names.write(seqid + '\n')
-
-"""
-Pull contigs/scaffolds from input nucleotide FASTA that contain a CRISPR to
-output file that will be processed by Prodigal.
-"""
-pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names}
-pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
-
-try:
-    with open(crispr_contigs, 'w') as crisprcont:
-        subprocess.run(pullseq_carray_cmd, stdout=crisprcont)
-except FileNotFoundError:
-    logging.error('cannot write CRISPR-containing contigs to file %s' % crispr_contigs)
+# crispr_contigs = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_%s.fna' % prefix)
+# crispr_contig_names = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_names_%s.txt' % prefix)
+# with open(crispr_contig_names, 'w') as carray_names:
+#     for seqid in list(set(crispr_array_df['seqid'].tolist())):
+#         carray_names.write(seqid + '\n')
+#
+# """
+# Pull contigs/scaffolds from input nucleotide FASTA that contain a CRISPR to
+# output file that will be processed by Prodigal.
+# """
+# pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names}
+# pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
+#
+# try:
+#     with open(crispr_contigs, 'w') as crisprcont:
+#         subprocess.run(pullseq_carray_cmd, stdout=crisprcont)
+# except FileNotFoundError:
+#     logging.error('cannot write CRISPR-containing contigs to file %s' % crispr_contigs)
 
 ###---END CRISPRDetect---###
 #==============================================================================
@@ -198,7 +198,9 @@ prodigal_outfmt = 'gff'
 prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
 prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 
-prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
+#prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':crispr_contigs}
+prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':nt_fasta}
+
 #Generate and run the Prodigal command
 prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
@@ -214,7 +216,7 @@ if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
 neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 
 #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_array_df, gene_gff_df=prodigal_gff_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
+neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_array_df, gene_gff_df=prodigal_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
 
 
 print(neighbor_gene_clusters)
