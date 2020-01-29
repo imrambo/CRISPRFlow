@@ -57,6 +57,10 @@ parser.add_argument('--prodigal_mode', type=str, dest='prodigal_mode', action='s
 default='single', help='Prodigal 2.6.3 search mode - choose single or meta')
 parser.add_argument('--macsy_dbtype', type=str, dest='macsy_dbtype', action='store',
 default='ordered_replicon', help='Specify dataset type for MacSyFinder. [unordered_replicon, unordered, ordered_replicon, gembase]')
+parser.add_argument('--macsy_eval', type=float, dest='macsy_eval', action='store',
+default=1e-4, help='E-value cutoff for MacSyFinder. Default = 1e-4')
+parser.add_argument('--macsy_coverage', type=float, dest='macsy_coverage', action='store',
+default=0.4, help='Minimum profile coverage for MacSyFinder. Default = 0.4')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -253,7 +257,7 @@ for index, row in crispr_array_df.iterrows():
 ###---BEGIN MacSyFinder---###
 #(Sub)type the groups of CRISPR-neighboring genes
 macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
-'--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
+'--e-value-search':opts.macsy_eval, '--i-evalue-select':opts.macsy_eval, '--coverage-profile':opts.macsy_coverage,
 '--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'.hmm', '--profile-dir':'/build/CRISPRFlow/data/profiles/CAS',
@@ -265,7 +269,6 @@ for csp in cluster_seq_paths:
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
     #Search all the CRISPR-Cas (sub)types
     macsyfinder_cmd.append('all')
-    print(macsyfinder_cmd)
     #Run MacSyFinder
     subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
@@ -276,22 +279,6 @@ if str(opts.fasta_file).endswith('.gz'):
     print('re-gzip compressing file %s' % opts.fasta_file)
     subprocess.run(['gzip', nt_fasta], shell=False)
 
-
-
-# neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
-#
-# #neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-# neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_array_df, gene_gff_df=prodigal_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
-#
-#
-# print(neighbor_gene_clusters)
-
-#
-
-#
-# macsyfinder_command = 'macsyfinder %s %s' % (optstring_join(macsyfinder_opts), 'all')
-# print(macsyfinder_command)
-# #subprocess.run([macsyfinder_command])
 
 
 
