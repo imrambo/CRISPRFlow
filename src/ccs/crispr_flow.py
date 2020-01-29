@@ -259,7 +259,7 @@ macsyfinder_opts = {'--db_type':'ordered_replicon',
 for cs in cluster_seqs:
     macsyfinder_opts['--sequence_db'] = cs
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
-    subprocess.run([macsyfinder_cmd], shell=False)
+    subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % cs)
 ###---END MacSyFinder---###
 #==============================================================================
