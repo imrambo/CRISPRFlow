@@ -259,7 +259,6 @@ macsyfinder_opts = {'--db_type':'ordered_replicon',
 for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence_db'] = csp
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
-    macsyfinder_cmd.append('all')
     print(macsyfinder_cmd)
     subprocess.run(macsyfinder_cmd, shell=False)
     logger.info('Typing with MacSyFinder performed for %s' % csp)
