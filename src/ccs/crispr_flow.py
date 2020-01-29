@@ -169,6 +169,7 @@ blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
 #####=====END SPACERS=====#####
 
 #####=====CRISPR ARRAY=====#####
+crispr_contig_ids = list(set(crispr_array_df['seqid'].tolist()))
 # crispr_contigs = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_%s.fna' % prefix)
 # crispr_contig_names = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_names_%s.txt' % prefix)
 # with open(crispr_contig_names, 'w') as carray_names:
@@ -214,7 +215,7 @@ prodigal_aa_dict = defaultdict(str)
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
-print(prodigal_aa_dict)
+print(prodigal_aa_dict.keys())
 ###---END Prodigal---###
 #==============================================================================
 ###---Fetch the CRISPR-neighboring genes---###
