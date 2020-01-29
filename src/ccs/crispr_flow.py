@@ -79,7 +79,7 @@ if opts.jobs < 1:
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER','Cluster']}
 
 for key, value in output_paths.items():
-    if not os.path.exists(value):
+    if not os.path.exists(value) and not key == 'MacSyFinder':
         os.makedirs(value)
     else:
         pass
