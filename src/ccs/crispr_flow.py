@@ -205,13 +205,16 @@ prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':'single', '-i':nt_fas
 prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
 
-gff_cols = ['seqid', 'source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
-prodigal_df = pd.read_csv(prodigal_out, sep='\s+', names=gff_cols, comment='#', index_col=False, skiprows=0)
-prodigal_df = prodigal_df[prodigal_df['ftype'] == 'CDS']
+#gff_cols = ['seqid', 'source', 'ftype', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+#prodigal_df = pd.read_csv(prodigal_out, sep='\s+', names=gff_cols, comment='#', index_col=False, skiprows=0)
+#prodigal_df = prodigal_df[prodigal_df['ftype'] == 'CDS']
+
 prodigal_aa_dict = defaultdict(str)
 
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
+
+print(prodigal_aa_dict)
 ###---END Prodigal---###
 #==============================================================================
 ###---Fetch the CRISPR-neighboring genes---###
