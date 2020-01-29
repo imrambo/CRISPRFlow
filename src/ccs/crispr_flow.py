@@ -126,7 +126,8 @@ crispr_detect_optdict = {'-f':nt_fasta,
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
 crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
-#subprocess.run(crispr_detect_cmd, shell=False)
+#Run CRISPRDetect
+subprocess.run(crispr_detect_cmd, shell=False)
 
 ###---Read the GFF file produced by CRISPRDetect---###
 crispr_detect_gff = crispr_detect_outpatt + '.gff'
@@ -138,7 +139,6 @@ crispr_spacer_df = pd.DataFrame()
 try:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
-    print(crispr_array_df.head())
     #Split up attributes for CRISPR arrays into new columns
     crispr_array_df[['ID', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
     #Select entries for spacers
