@@ -240,7 +240,7 @@ for index, row in crispr_array_df.iterrows():
     cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_orfclust_%d.faa' % (row['ID'], opts.window_extent))
     cluster_seq_paths.append(cluster_seqs)
     with open(cluster_seqs, 'w') as clustseq:
-        SeqIO.write(cluster_seqs, cluster_orfs, 'fasta')
+        SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
     #contig_orfs = [prodigal_aa_dict[key] for key in prodigal_aa_dict.keys() if re.match(pattern, key) and [int(coord.strip()) for coord in prodigal_aa_dict[key].description.split('#')[1:3]]
     #Pull the ORF coordinates
 
