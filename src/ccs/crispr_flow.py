@@ -79,7 +79,8 @@ if opts.jobs < 1:
 output_paths = {p: os.path.join(opts.out_root, p) for p in ['CRISPRDetect','Prodigal','MacSyFinder','HMMER','Cluster']}
 
 for key, value in output_paths.items():
-    if not os.path.exists(value) and key != 'MacSyFinder':
+    #if not os.path.exists(value) and key != 'MacSyFinder':
+    if not os.path.isdir(value):
         os.makedirs(value)
     else:
         pass
@@ -244,6 +245,7 @@ for index, row in crispr_array_df.iterrows():
     cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_%s_orfclust_%d.faa' % (row['seqid'], row['ID'], opts.window_extent))
     cluster_seq_paths.append(cluster_seqs)
     with open(cluster_seqs, 'w') as clustseq:
+        print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
         SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
     #contig_orfs = [prodigal_aa_dict[key] for key in prodigal_aa_dict.keys() if re.match(pattern, key) and [int(coord.strip()) for coord in prodigal_aa_dict[key].description.split('#')[1:3]]
     #Pull the ORF coordinates
