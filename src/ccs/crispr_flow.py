@@ -25,6 +25,7 @@ from shell_tools import *
 from gff3 import gff3_to_pddf
 from gene_clusters import *
 from collections import defaultdict
+import shutil
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -111,6 +112,7 @@ else:
 ###---BEGIN CRISPRDetect---###
 ###---Run CRISPRDetect---###
 logger.info('Run CRISPRDetect')
+print('Begin CRISPRDetect...')
 
 ###---CRISPRDetect---###
 #Pattern for CRISPRDetect output
@@ -159,9 +161,11 @@ with open(crispr_spacer_fna, 'w') as spacer_fa:
         spacer_fa.write(spacer_fasta_record)
 
 ###---Cluster unique spacers @ 100% identity with CD-HIT-EST---###
-crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers_cluster100.fna' % prefix)
+crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers_cd-hit-est_cluster100.fna' % prefix)
 ###---CD-HIT-EST---###
-cdhit_est_opts = {'-i':crispr_spacer_fna, '-o':crispr_spacers_cluster, '-c':'1.0', '-b':'20', '-d':'50', '-T':'4'}
+cdhit_est_opts = {'-i':crispr_spacer_fna, '-o':crispr_spacers_cluster,
+    '-c':'1.0', '-b':'20', '-d':'50', '-T':opts.threads,
+    '-n':'11'}
 cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
 subprocess.run(cdhit_est_spc_cmd)
 
@@ -248,7 +252,9 @@ for index, row in crispr_array_df.iterrows():
 #==============================================================================
 ###---BEGIN MacSyFinder---###
 #(Sub)type the groups of CRISPR-neighboring genes
-
+if os.path.isdir(output_paths['MacSyFinder']):
+    print('directory exists and is not empty - overwriting for MacSyFinder run')
+    shutil.rmtree(output_paths['MacSyFinder'])
 macsyfinder_opts = {'--db-type':'ordered_replicon',
 '--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
 '--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
@@ -264,6 +270,9 @@ for csp in cluster_seq_paths:
     logger.info('Typing with MacSyFinder performed for %s' % csp)
 ###---END MacSyFinder---###
 #==============================================================================
+subprocess.run(['gzip', nt_fasta], shell=False)
+
+
 
 # neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
 #
