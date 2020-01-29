@@ -169,7 +169,9 @@ blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
 #####=====END SPACERS=====#####
 
 #####=====CRISPR ARRAY=====#####
+#List of contigs containing a CRISPR array
 crispr_contig_ids = list(set(crispr_array_df['seqid'].tolist()))
+
 # crispr_contigs = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_%s.fna' % prefix)
 # crispr_contig_names = os.path.join(output_paths['CRISPRDetect'], 'crispr_contigs_names_%s.txt' % prefix)
 # with open(crispr_contig_names, 'w') as carray_names:
@@ -215,7 +217,11 @@ prodigal_aa_dict = defaultdict(str)
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
-print([int(a.strip()) for a in prodigal_aa_dict['NZ_KB890278.1_35'].description.split('#')[1:3]])
+print(crispr_array_df.head())
+# for crisprcont in crispr_contig_ids:
+#     contig_orfs = [prodigal_aa_dict[key] for key in prodigal_aa_dict.keys() if key.startswith(crisprcont) and re.match(r'.*?_\d+$', key)]
+#     #Pull the ORF coordinates
+#     orf_coord = [int(a.strip()) for a in prodigal_aa_dict['NZ_KB890278.1_35'].description.split('#')[1:3]]
 
 ###---END Prodigal---###
 #==============================================================================
