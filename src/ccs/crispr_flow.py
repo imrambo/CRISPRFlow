@@ -250,7 +250,7 @@ for index, row in crispr_array_df.iterrows():
 #(Sub)type the groups of CRISPR-neighboring genes
 
 macsyfinder_opts = {'--db-type':'ordered_replicon',
-'--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage_profile':0.5,
+'--e-value-search':1e-6, '--i-evalue-select':1e-6, '--coverage-profile':0.5,
 '--def':'../../data/definitions/%s' % opts.ccs_typing, '--out-dir':output_paths['MacSyFinder'],
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'hmm', '--profile-dir':'../../data/profiles/CAS',
