@@ -138,8 +138,9 @@ crispr_spacer_df = pd.DataFrame()
 try:
     #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
     crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+    print(crispr_array_df.head())
     #Split up attributes for CRISPR arrays into new columns
-    #crispr_array_df[['ID', 'Name', 'Parent', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
+    crispr_array_df[['ID', 'Name', 'Parent', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
     #Select entries for spacers
     crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
     #Split up attributes for CRISPR spacers into new columns
@@ -233,7 +234,7 @@ for index, row in crispr_array_df.iterrows():
     for orfid in prodigal_aa_dict.keys():
         if re.match(pattern, orfid):
             orf_coord = [int(a.strip()) for a in prodigal_aa_dict[orfid].description.split('#')[1:3]]
-            if orf_coord[0] >= row['start'] - opts.window_extent or orf_coord[1] <= row['end'] + opts.window_extent:
+            if orf_coord[0] >= int(row['start']) - opts.window_extent or orf_coord[1] <= int(row['end']) + opts.window_extent:
                 cluster_orfs.append(prodigal_aa_dict[orfid])
     #write FASTA amino acid file of translated ORFs within window extent of CRISPR
     cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_orfclust_%d.faa' % (row['ID'], opts.window_extent))
