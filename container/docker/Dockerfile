@@ -64,24 +64,4 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
     && python2.7 setup.py test -vv \
     && python2.7 setup.py install
 
-#DIAMOND
-#RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
-#    && wget http://github.com/bbuchfink/diamond/releases/download/v0.9.26/diamond-linux64.tar.gz \
-#    && tar -zxf diamond-linux64.tar.gz \
-#    && rm diamond-linux64.tar.gz
-#ENV PATH "$PATH:/build/DIAMOND"
-
-#HHSuite
-#RUN cd /build \
-#    && git clone https://github.com/soedinglab/hh-suite.git \
-#    && mkdir -p hh-suite/build \
-#    && cd hh-suite/build \
-#    && cmake -DCMAKE_INSTALL_PREFIX=. .. \
-#    && make -j 4 \
-#    && make install
-
-#ENV PATH "$PATH:/build/hh-suite/build/bin"
-#ENV PATH "$PATH:/build/hh-suite/build/scripts"
-
-
 RUN cd /build && git clone -b f_crispr_clusters --single-branch https://github.com/imrambo/CRISPRFlow.git

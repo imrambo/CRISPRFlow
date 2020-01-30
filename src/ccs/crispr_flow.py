@@ -23,7 +23,7 @@ from hmmbo import *
 #from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
-#from gene_clusters import *
+from gene_clusters import *
 #==============================================================================
 parser = argparse.ArgumentParser()
 
