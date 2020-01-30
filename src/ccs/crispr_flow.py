@@ -53,7 +53,7 @@ help='suffix for HMM gene profiles. Default is ".hmm"')
 parser.add_argument('--prefix', type=str, dest='prefix', action='store', nargs='?',
 help='optional prefix for output files. Uses the input nucleotide fasta basename if not supplied.')
 parser.add_argument('--prodigal_mode', type=str, dest='prodigal_mode', action='store',
-default='single', help='Prodigal 2.6.3 search mode - choose single or meta')
+default='single', help='Prodigal 2.6.3 search mode - choose single or meta. Default = single')
 parser.add_argument('--macsy_dbtype', type=str, dest='macsy_dbtype', action='store',
 default='ordered_replicon', help='Specify dataset type for MacSyFinder. [unordered_replicon, unordered, ordered_replicon, gembase]')
 parser.add_argument('--macsy_eval', type=float, dest='macsy_eval', action='store',
