@@ -39,7 +39,7 @@ help='number of threads for each command. Default = 1')
 parser.add_argument('--jobs', type=int, dest='jobs', action='store', default=1,
 help='number of jobs for each step. ###---NOT OPERATIONAL AT THIS TIME---###')
 parser.add_argument('--clst_window_extent', type=int, dest='clst_window_extent', action='store', default=10000,
-help='Number of bp extension to include in a CRISPR-Cas cluster. Default = 10000.')
+help='Integer bp extension to search for ORFs near a CRISPR array. Default = 10000.')
 parser.add_argument('--joblog', type=str, dest='joblog', action='store',
 nargs = '?', help='Path to logging joblog.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
@@ -62,6 +62,8 @@ parser.add_argument('--macsy_coverage', type=float, dest='macsy_coverage', actio
 default=0.4, help='Minimum profile coverage for MacSyFinder. Default = 0.4')
 parser.add_argument('--macsy_systems', type=str, dest='macsy_systems', action='store',
 default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default = all')
+parser.add_argument('--crispr_qual_cutoff', type=int, dest='crispr_qual_cutoff', action='store',
+default=3, help='Exclude CRISPR arrays with CRISPRDetect quality score less than this value. Default = 3')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -131,7 +133,7 @@ crispr_detect_log = os.path.join(output_paths['CRISPRDetect'], prefix + '_CRISPR
 #CRISPRDetect options
 crispr_detect_optdict = {'-f':nt_fasta,
 '-o':crispr_detect_outpatt, '-T':opts.threads, '-minimum_repeat_length':20,
-'-array_quality_score_cutoff':3, '-tmp_dir':opts.tmp_dir,
+'-array_quality_score_cutoff':opts.crispr_qual_cutoff, '-tmp_dir':opts.tmp_dir,
 '-logfile':crispr_detect_log}
 
 #Path to CRISPRDetect executable
