@@ -65,7 +65,7 @@ default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default
 parser.add_argument('--crispr_qual_cutoff', type=int, dest='crispr_qual_cutoff', action='store',
 default=3, help='Exclude CRISPR arrays with CRISPRDetect quality score less than this value. Default = 3')
 parser.add_argument('--profile_dir', type=str, dest='profile_dir', action='store',
-default='/build/CRISPRFlow/data/profiles', help='Path to diretory containing HMMs for MacSyFinder. Default = /build/CRISPRFlow/data/profiles')
+default='/build/CRISPRFlow/data/profiles', help='Path to directory containing HMMs for MacSyFinder. Default = /build/CRISPRFlow/data/profiles')
 
 
 opts = parser.parse_args()
