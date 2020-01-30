@@ -37,7 +37,7 @@ help='temporary file directory. Default = /tmp')
 parser.add_argument('--threads', type=int, dest='threads', action='store', default=1,
 help='number of threads for each command. Default = 1')
 parser.add_argument('--jobs', type=int, dest='jobs', action='store', default=1,
-help='number of jobs for each step')
+help='number of jobs for each step. ###---NOT OPERATIONAL AT THIS TIME---###')
 parser.add_argument('--clst_window_extent', type=int, dest='clst_window_extent', action='store', default=10000,
 help='Number of bp extension to include in a CRISPR-Cas cluster. Default = 10000.')
 parser.add_argument('--joblog', type=str, dest='joblog', action='store',
