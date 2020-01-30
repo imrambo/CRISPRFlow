@@ -64,13 +64,6 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
     && python2.7 setup.py test -vv \
     && python2.7 setup.py install
 
-RUN cd /build && git clone https://github.com/bcthomas/pullseq.git \
-    && cd pullseq \
-    && ./bootstrap \
-    && ./configure \
-    && make \
-    && make install
-
 #DIAMOND
 #RUN mkdir /build/DIAMOND && cd /build/DIAMOND \
 #    && wget http://github.com/bbuchfink/diamond/releases/download/v0.9.26/diamond-linux64.tar.gz \

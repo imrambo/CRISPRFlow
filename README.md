@@ -1,7 +1,8 @@
-# CRISPRFlow
+# CRISPRFlow version 1.0.0.1
 
 Pipeline to search for CRISPR-Cas systems.
 
+Running with Docker
 1) Build your docker container
 
 cd container/docker && docker build -t <TAG> .

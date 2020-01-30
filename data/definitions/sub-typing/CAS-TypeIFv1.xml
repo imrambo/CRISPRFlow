@@ -1,0 +1,54 @@
+<system inter_gene_max_space="5" min_mandatory_genes_required="6" min_genes_required="6">
+
+#Tn7-like Transposon-encoded Type IF Variant 1, Peters et al. 2017 PNAS
+
+#TnsA and TnsB are catalytic enzymes that excise the
+#transposon donor via coordinated double-strand breaks
+#TnsA C terminal
+<gene name="PF08721.11" presence="accessory"/>
+#TnsA N terminal
+<gene name="PF08722.11" presence="mandatory"/>
+
+#TnsB
+<gene name="PF00665.26" presence="mandatory"/>
+
+#TnsC
+<gene name="PF13401.6" presence="accessory"/>
+<gene name="PF11426.8" presence="accessory"/>
+
+#TnsD
+<gene name="PF15978.5" presence="accessory"/>
+#TniQ
+<gene name="PF06527.11" presence="accessory"/>
+
+#TnsE
+<gene name="PF18623.1" presence="forbidden" system_ref="Tn7"/>
+
+#Type IF Variant 1 does not contain Cas1,2,3
+<gene name="Cas3_0_I" presence="forbidden"  system_ref="CAS"/>
+<gene name="Cas2_0_I-II-III" presence="forbidden"  system_ref="CAS"/>
+<gene name="Cas2_0_I-II-III-V" presence="forbidden"  system_ref="CAS"/>
+<gene name="Cas1_0_I-II-III" presence="forbidden"  system_ref="CAS"/>
+<gene name="Cas1_0_I-II-III-V" presence="forbidden"  system_ref="CAS"/>
+
+#Specific to Type IF
+<gene name="Cas1_0_IF" presence="forbidden" system_ref="CAS-TypeIF"/>
+<gene name="Cas3-Cas2_0_IF" presence="forbidden" system_ref="CAS-TypeIF"/>
+
+#Cas8f
+<gene name="Csy1_0_IF" presence="mandatory"/>
+#Cas5f
+<gene name="Csy2_0_IF" presence="mandatory"/>
+#Cas7f
+<gene name="Csy3_0_IF" presence="mandatory"/>
+#Cas6f
+<gene name="Cas6_0_IF" presence="mandatory"/>
+
+#Distinguishing Type IF from other Type I
+<gene name="Cas6_0_I-III" presence="accessory"  system_ref="CAS"/>
+<gene name="Cas4_0_I-II" presence="accessory"  system_ref="CAS"/>
+<gene name="Cas5_0_I" presence="forbidden"  system_ref="CAS"/>
+<gene name="Cas3_1_I" presence="forbidden"  system_ref="CAS"/>
+
+
+</system>

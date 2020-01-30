@@ -23,8 +23,7 @@ from hmmbo import *
 #from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf
-from gene_clusters import *
-from collections import defaultdict
+#from gene_clusters import *
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -39,8 +38,8 @@ parser.add_argument('--threads', type=int, dest='threads', action='store', defau
 help='number of threads for each command. Default = 1')
 parser.add_argument('--jobs', type=int, dest='jobs', action='store', default=1,
 help='number of jobs for each step')
-parser.add_argument('--window_extent', type=int, dest='window_extent', action='store', default=10000,
-help='Number of bp extension to include in a cluster. Default = 10kb.')
+parser.add_argument('--clst_window_extent', type=int, dest='clst_window_extent', action='store', default=10000,
+help='Number of bp extension to include in a CRISPR-Cas cluster. Default = 10000.')
 parser.add_argument('--joblog', type=str, dest='joblog', action='store',
 nargs = '?', help='Path to logging joblog.')
 parser.add_argument('--crispr_detect_dir', type=str, dest='CRISPRDetectDir', action='store',
@@ -61,6 +60,8 @@ parser.add_argument('--macsy_eval', type=float, dest='macsy_eval', action='store
 default=1e-4, help='E-value cutoff for MacSyFinder. Default = 1e-4')
 parser.add_argument('--macsy_coverage', type=float, dest='macsy_coverage', action='store',
 default=0.4, help='Minimum profile coverage for MacSyFinder. Default = 0.4')
+parser.add_argument('--macsy_systems', type=str, dest='macsy_systems', action='store',
+default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default = all')
 
 opts = parser.parse_args()
 #==============================================================================
@@ -230,7 +231,7 @@ prodigal_aa_dict = dict()
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
     prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
 
-###---Fetch the CRISPR-proximal ORFs---###
+###---Fetch the proximal ORFs for each putative CRISPR array---###
 #Loop through the CRISPR array DataFrame and pull out Prodigal ORF entries
 #that fall within the window coordinate extent
 cluster_seq_paths = []
@@ -242,10 +243,12 @@ for index, row in crispr_array_df.iterrows():
     for orfid in prodigal_aa_dict.keys():
         if re.match(pattern, orfid):
             orf_coord = [int(a.strip()) for a in prodigal_aa_dict[orfid].description.split('#')[1:3]]
-            if orf_coord[0] >= int(row['start']) - opts.window_extent or orf_coord[1] <= int(row['end']) + opts.window_extent:
+            if orf_coord[0] >= int(row['start']) - opts.clst_window_extent or orf_coord[1] <= int(row['end']) + opts.clst_window_extent:
                 cluster_orfs.append(prodigal_aa_dict[orfid])
+            else:
+                pass
     #write FASTA amino acid file of translated ORFs within window extent of CRISPR
-    cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_%s_orfclust_%d.faa' % (row['seqid'], row['ID'], opts.window_extent))
+    cluster_seqs = os.path.join(output_paths['Prodigal'], '%s_%s_orfclust_%d.faa' % (row['seqid'], row['ID'], opts.clst_window_extent))
     cluster_seq_paths.append(cluster_seqs)
     with open(cluster_seqs, 'w') as clustseq:
         print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
@@ -267,88 +270,14 @@ for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence-db'] = csp
     macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, get_basename(csp)))
     macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
-    #Search all the CRISPR-Cas (sub)types
-    macsyfinder_cmd.append('all')
+    #Search the CRISPR-Cas (sub)types systems of choice
+    macsyfinder_cmd.append(opts.macsy_systems)
     #Run MacSyFinder
     subprocess.run(macsyfinder_cmd, shell=False)
-    logger.info('Typing with MacSyFinder performed for %s' % csp)
+    logger.info('%s with MacSyFinder performed for %s' % (opts.ccs_typing, csp))
 ###---END MacSyFinder---###
 #==============================================================================
 #Compress the input if it was gzipped originally
 if str(opts.fasta_file).endswith('.gz'):
     print('re-gzip compressing file %s' % opts.fasta_file)
     subprocess.run(['gzip', nt_fasta], shell=False)
-
-
-
-
-
-
-
-
-
-
-#
-# #Generate and run the Prodigal command
-# prodigal_command = prodigal_command_generate(ntfasta=nt_fasta, optdict=prodigal_opts,
-# outfmt=prodigal_outfmt, prodigal='prodigal')
-#
-# logger.debug('Prodigal will be run in %s mode' % prodigal_command[1]['-p'])
-#
-# subprocess.run(prodigal_command[0], shell=False)
-#
-# if os.path.exists(prodigal_out):
-#     if os.stat(prodigal_out).st_size != 0:
-#         prodigal_gff_df = gff3_to_pddf(gff = prodigal_out, ftype = 'CDS', index_col=False)
-#     else:
-#         logger.error('Prodigal GFF %s is empty' % prodigal_out)
-# else:
-#     logger.error('Prodigal GFF output %s does not exist' % prodigal_out)
-#
-#
-# if os.path.exists(prodigal_aa):
-#     if os.stat(prodigal_aa).st_size != 0:
-#          prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
-#
-#     else:
-#         logger.error('Prodigal amino acid fasta %s is empty' % prodigal_aa)
-# else:
-#     logger.error('Prodigal amino acid fasta %s does not exist' % prodigal_aa)
-
-# PRODIGAL_SOURCES = [nt_fasta]
-# PRODIGAL_TARGETS = [prodigal_out, prodigal_aa, prodigal_nt]
-# PRODIGAL_OPTS = prodigal_opts
-# PRODIGAL_OPTS['-o'] = '${TARGETS}[0]'
-# PRODIGAL_OPTS['-a'] = '${TARGETS}[1]'
-# PRODIGAL_OPTS['-d'] = '${TARGETS}[2]'
-# PRODIGAL_COMMAND = prodigal_command_generate(ntfasta=PRODIGAL_SOURCES[0], optdict=PRODIGAL_OPTS,
-# outfmt=prodigal_outfmt, prodigal='prodigal')
-#
-# PRODIGAL_CMDBLD = scons_command(targets = PRODIGAL_TARGETS, sources = PRODIGAL_SOURCES, command = PRODIGAL_COMMAND[0])
-#
-# SConstruct.write(PRODIGAL_CMDBLD + '\n')
-#==============================================================================
-#Fetch the CRISPR-neighboring genes
-#neighbor_aa_fasta = os.path.join(output_paths['Prodigal'], nt_fasta_basename + '_CRISPR-neighbor-genes.faa')
-# print(crispr_gff_df)
-# print(prodigal_gff_df)
-# print(prodigal_aa_dict)
-#neighbor_nt_fasta = os.path.join(prodigal_outdir, nt_fasta_basename + '_CRISPR-neighbor-genes.fna')
-#neighbor_gene_clusters = fetch_clusters(anchor_gff_df=crispr_gff_df, gene_gff_df=prodigal_gff_df, gene_seq_dict=prodigal_aa_dict, winsize=opts.window_extent, att_fs=';')
-#==============================================================================
-
-# #==============================================================================
-# ##---HMMSEARCH---###
-# hmmsearch_opts = {'--domE':10, '-E':10, '--incE':1e-6, '--incdomE':1e-6, '--seed':42, '--cpu':1}
-#
-# seqdb = neighbor_aa_fasta
-#
-# #Generate the command strings
-# if ',' in opts.database:
-#     database_list = ','.split(opts.database)
-#     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=database_list, hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
-#
-# else:
-#     hmmsearch_commands = hmmbo.hmmsearch_command_generator(db_list=[opts.database], hmmsearch_optdict=hmmsearch_opts, parallel_optdict=parallel_optdict, jobs=1)
-
-#SConstruct.close()
