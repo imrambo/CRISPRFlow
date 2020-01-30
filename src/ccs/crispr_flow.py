@@ -64,6 +64,9 @@ parser.add_argument('--macsy_systems', type=str, dest='macsy_systems', action='s
 default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default = all')
 parser.add_argument('--crispr_qual_cutoff', type=int, dest='crispr_qual_cutoff', action='store',
 default=3, help='Exclude CRISPR arrays with CRISPRDetect quality score less than this value. Default = 3')
+parser.add_argument('--profile_dir', type=str, dest='profile_dir', action='store',
+default='/build/CRISPRFlow/data/profiles', help='Path to diretory containing HMMs for MacSyFinder. Default = /build/CRISPRFlow/data/profiles')
+
 
 opts = parser.parse_args()
 #==============================================================================
@@ -265,7 +268,7 @@ macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
 '--e-value-search':opts.macsy_eval, '--i-evalue-select':opts.macsy_eval, '--coverage-profile':opts.macsy_coverage,
 '--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-'--profile-suffix':'.hmm', '--profile-dir':'/build/CRISPRFlow/data/profiles/CAS',
+'--profile-suffix':'.hmm', '--profile-dir':opts.profile_dir,
 '--worker':opts.threads}
 
 for csp in cluster_seq_paths:
