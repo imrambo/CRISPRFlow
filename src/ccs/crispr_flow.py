@@ -6,7 +6,7 @@ Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
 
 Thirteen... that's a mighty unlucky number... for somebody!
 """
-version = 'v1.0.0.0'
+version = 'v1.0.0.1'
 
 from Bio import SeqIO
 import argparse
@@ -19,7 +19,7 @@ import magic
 import gzip
 import re
 from datetime import datetime
-from hmmbo import *
+#from hmmbo import *
 #from prodigal import *
 from shell_tools import *
 from gff3 import gff3_to_pddf

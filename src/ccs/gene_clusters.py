@@ -4,20 +4,6 @@ import gzip
 from Bio import SeqIO
 from shell_tools import is_gzipped
 #------------------------------------------------------------------------------
-# def make_seqdict(input_file, format='fasta'):
-#     """
-#     Create a SeqIO sequence dictionary.
-#     """
-#     if is_gzipped(input_file):
-#         seq_handle = gzip.open(input_file, 'rb')
-#     else:
-#         seq_handle = open(input_file, 'r')
-#
-#     seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, format))
-#
-#     return seq_dict
-
-
 def make_seqdict(input_file, format='fasta'):
     """
     Create a SeqIO sequence dictionary.
