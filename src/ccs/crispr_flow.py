@@ -119,9 +119,6 @@ if is_gzipped(nt_fasta):
 
 else:
     pass
-
-#Make a SeqIO dictionary of the input nucleotide sequences
-#nt_fasta_seqdict = make_seqdict(nt_fasta, format = 'fasta')
 #==============================================================================
 ###---BEGIN CRISPRDetect---###
 ###---Run CRISPRDetect---###

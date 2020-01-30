@@ -94,5 +94,5 @@ RUN cd /build && wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?
 <<<<<<< HEAD
 =======
 
-RUN cd /build && git clone -b f_crispr_clusters --single-branch https://github.com/imrambo/CRISPRFlow.git
+RUN cd /build && git clone -b f_crispr_transposon --single-branch https://github.com/imrambo/CRISPRFlow.git
 >>>>>>> f_crispr_clusters

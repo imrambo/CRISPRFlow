@@ -1,0 +1,24 @@
+<system inter_gene_max_space="5" min_mandatory_genes_required="2" min_genes_required="2">
+
+#Tn7 transposon genes
+#TnsA C terminal
+<gene name="PF08721.11" presence="accessory"/>
+#TnsA N terminal
+<gene name="PF08722.11" presence="mandatory"/>
+
+#TnsB
+<gene name="PF00665.26" presence="mandatory"/>
+
+#TnsC
+<gene name="PF13401.6" presence="accessory"/>
+<gene name="PF11426.8" presence="accessory"/>
+
+#TnsD
+<gene name="PF15978.5" presence="accessory"/>
+#TniQ
+<gene name="PF06527.11" presence="accessory"/>
+
+#TnsE
+<gene name="PF18623.1" presence="accessory"/>
+
+</system>
