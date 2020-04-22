@@ -21,7 +21,7 @@ import re
 from datetime import datetime
 #from hmmbo import *
 #from prodigal import *
-from shell_tools import *
+import shell_tools
 from gff3 import gff3_to_pddf
 from gene_clusters import *
 #==============================================================================
@@ -65,7 +65,7 @@ default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default
 parser.add_argument('--crispr_qual_cutoff', type=int, dest='crispr_qual_cutoff', action='store',
 default=3, help='Exclude CRISPR arrays with CRISPRDetect quality score less than this value. Default = 3')
 parser.add_argument('--profile_dir', type=str, dest='profile_dir', action='store',
-default='/build/CRISPRFlow/data/profiles', help='Path to directory containing HMMs for MacSyFinder. Default = /build/CRISPRFlow/data/profiles')
+default='/build/data/profiles', help='Path to directory containing HMMs for MacSyFinder. Default = /build/data/profiles')
 
 
 opts = parser.parse_args()
@@ -139,7 +139,7 @@ crispr_detect_optdict = {'-f':nt_fasta,
 #Path to CRISPRDetect executable
 crispr_detect_exec = os.path.join(opts.CRISPRDetectDir, 'CRISPRDetect.pl')
 
-crispr_detect_cmd = exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
+crispr_detect_cmd = shell_tools.exec_cmd_generate(crispr_detect_exec, crispr_detect_optdict)
 #Run CRISPRDetect
 subprocess.run(crispr_detect_cmd, shell=False)
 
@@ -178,14 +178,14 @@ crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_s
 cdhit_est_opts = {'-i':crispr_spacer_fna, '-o':crispr_spacers_cluster,
     '-c':'1.0', '-b':'20', '-d':'50', '-T':opts.threads,
     '-n':'11'}
-cdhit_est_spc_cmd = exec_cmd_generate('cd-hit-est', cdhit_est_opts)
+cdhit_est_spc_cmd = shell_tools.exec_cmd_generate('cd-hit-est', cdhit_est_opts)
 subprocess.run(cdhit_est_spc_cmd)
 
 ###---BLASTN (short sequence task) spacers against viral database---###
 blastn_short_opts = {'-task':'blastn-short', '-query':crispr_spacers_cluster,
     '-db':'viral_sequences', '-outfmt':"'6 std qlen slen'", '-out':'blasnout',
     '-evalue':'1.0e-04', '-perc_identity':'90'}
-blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
+blastn_short_cmd = shell_tools.exec_cmd_generate('blastn', blastn_short_opts)
 #####=====END SPACERS=====#####
 
 #####=====CRISPR ARRAY=====#####
@@ -203,7 +203,7 @@ blastn_short_cmd = exec_cmd_generate('blastn', blastn_short_opts)
 # output file that will be processed by Prodigal.
 # """
 # pullseq_carray_opts = {'--input':nt_fasta, '--names':crispr_contig_names}
-# pullseq_carray_cmd = exec_cmd_generate('pullseq', pullseq_carray_opts)
+# pullseq_carray_cmd = shell_tools.exec_cmd_generate('pullseq', pullseq_carray_opts)
 #
 # try:
 #     with open(crispr_contigs, 'w') as crisprcont:
@@ -224,7 +224,7 @@ prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':opts.prodigal_mode, '-i':nt_fasta}
 
 #Generate and run the Prodigal command
-prodigal_cmd = exec_cmd_generate('prodigal', prodigal_opts)
+prodigal_cmd = shell_tools.exec_cmd_generate('prodigal', prodigal_opts)
 subprocess.run(prodigal_cmd, shell = False)
 
 
@@ -256,14 +256,13 @@ for index, row in crispr_array_df.iterrows():
         print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
         SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
 
-
 ###---END Prodigal---###
 #==============================================================================
 ###---BEGIN MacSyFinder---###
 #(Sub)type the groups of CRISPR-neighboring genes
 macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
 '--e-value-search':opts.macsy_eval, '--i-evalue-select':opts.macsy_eval, '--coverage-profile':opts.macsy_coverage,
-'--def':'/build/CRISPRFlow/data/definitions/%s' % opts.ccs_typing,
+'--def':'/build/data/definitions/%s' % opts.ccs_typing,
 '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
 '--profile-suffix':'.hmm', '--profile-dir':opts.profile_dir,
 '--worker':opts.threads}
@@ -271,7 +270,7 @@ macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
 for csp in cluster_seq_paths:
     macsyfinder_opts['--sequence-db'] = csp
     macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, get_basename(csp)))
-    macsyfinder_cmd = exec_cmd_generate('macsyfinder', macsyfinder_opts)
+    macsyfinder_cmd = shell_tools.exec_cmd_generate('macsyfinder', macsyfinder_opts)
     #Search the CRISPR-Cas (sub)types systems of choice
     macsyfinder_cmd.append(opts.macsy_systems)
     #Run MacSyFinder

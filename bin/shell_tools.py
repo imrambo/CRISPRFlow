@@ -50,8 +50,8 @@ def joblog_test(joblog):
     Returns a two list of tuples containing the command and exit code
     (zero and non-zero exit codes).
     """
-    nonzero=[]
-    zero=[]
+    nonzero = []
+    zero = []
     if os.path.exists(joblog) and os.path.getsize(joblog) > 0:
         with open(joblog, 'r') as jl:
             next(jl)
@@ -63,12 +63,12 @@ def joblog_test(joblog):
                     nonzero.append((command, exit_code))
                 else:
                     zero.append([command, exit_code])
-    if nonzero:
-        warning_message = '%d of %d commands returned a non-zero exit code' % (len(nonzero), len(nonzero)+len(zero))
-        logging.warning(warning_message)
-        for c,e in nonzero:
-            warning_message = 'Command: "%s" returned a non-zero exit code of: %s' % (c, e)
-            logging.warning(warning_message)
+    # if nonzero:
+    #     warning_message = '%d of %d commands returned a non-zero exit code' % (len(nonzero), len(nonzero)+len(zero))
+    #     logging.warning(warning_message)
+    #     for c,e in nonzero:
+    #         warning_message = 'Command: "%s" returned a non-zero exit code of: %s' % (c, e)
+    #         logging.warning(warning_message)
     return nonzero, zero
 #------------------------------------------------------------------------------
 def get_basename(file_path):

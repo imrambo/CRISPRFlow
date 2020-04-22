@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+    crispr:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+    
+        volumes:
+            - type: volume
+              source: ./data
+              target: /build/data
+              read_only: true
+        command: python3 /build/bin/crispr_flow.py -h
