@@ -182,10 +182,11 @@ cdhit_est_spc_cmd = shell_tools.exec_cmd_generate('cd-hit-est', cdhit_est_opts)
 subprocess.run(cdhit_est_spc_cmd)
 
 ###---BLASTN (short sequence task) spacers against viral database---###
-blastn_short_opts = {'-task':'blastn-short', '-query':crispr_spacers_cluster,
-    '-db':'viral_sequences', '-outfmt':"'6 std qlen slen'", '-out':'blasnout',
-    '-evalue':'1.0e-04', '-perc_identity':'90'}
-blastn_short_cmd = shell_tools.exec_cmd_generate('blastn', blastn_short_opts)
+# blastn_short_opts = {'-task':'blastn-short', '-query':crispr_spacers_cluster,
+#     '-db':'viral_sequences', '-outfmt':"'6 std qlen slen'", '-out':'blasnout',
+#     '-evalue':'1.0e-04', '-perc_identity':'90'}
+# blastn_short_cmd = shell_tools.exec_cmd_generate('blastn', blastn_short_opts)
+
 #####=====END SPACERS=====#####
 
 #####=====CRISPR ARRAY=====#####
