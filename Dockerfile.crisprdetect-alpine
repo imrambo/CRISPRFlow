@@ -1,0 +1,38 @@
+FROM alpine:3.11.6
+
+LABEL maintainer="ian.rambo@utexas.edu"
+
+USER root
+
+RUN mkdir -p /build/data
+
+RUN apk update && apk --no-cache add wget \
+    git \
+    perl \
+    unzip
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup -s /bin/sh
+
+WORKDIR /build
+
+RUN chown -R appuser:appgroup /build
+
+USER appuser
+
+RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && tar -zxf ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && rm ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
+    && cd CRISPRDetect_2.4 \
+    && unzip CRISPRDetect_2.4.zip \
+    && rm CRISPRDetect_2.4.zip \
+    && cd CRISPRDetect_2.4 \
+    && cp /build/ncbi-blast-2.10.0+/bin/blastn . \
+    && rm -rf /build/ncbi-blast-2.10.0+
+
+ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
+
+#COPY ./bin /build/bin
+
+#&& chmod -R 755 . \
+#&& chmod 777 tmp \

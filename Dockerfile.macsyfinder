@@ -1,0 +1,62 @@
+FROM ubuntu:18.04 AS stage1
+
+LABEL maintainer="ian.rambo@utexas.edu"
+
+USER root
+
+RUN mkdir -p /build/data
+
+RUN apt-get update && apt-get -y install apt-utils \
+    wget \
+    gcc \
+    make \
+    python3.7 \
+    python2.7 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean -y
+
+RUN groupadd -r macsygrp && useradd -r -s /bin/nologin -g macsygrp macsygrp
+
+WORKDIR /build
+
+RUN chown -R macsygrp:macsygrp /build
+
+USER macsygrp
+
+RUN wget http://eddylab.org/software/hmmer/hmmer.tar.gz \
+    && tar -zxf hmmer.tar.gz \
+    && cd hmmer-3.3 \
+    && ./configure --prefix /build \
+    && make \
+    && make check \
+    && make install \
+    && rm hmmer.tar.gz
+
+RUN wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?file_path=macsyfinder-1.0.5.tar.gz -O macsyfinder-1.0.5.tar.gz \
+    && tar -zxf macsyfinder-1.0.5.tar.gz \
+    && cd macsyfinder-1.0.5 \
+    && python2.7 setup.py build \
+    && python2.7 setup.py test -vv \
+    && python2.7 setup.py install \
+    && cd .. \
+    && rm macsyfinder-1.0.5.tar.gz
+
+RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && tar -zxf ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && rm ncbi-blast-2.10.0+-x64-linux.tar.gz
+
+
+FROM python:2.7.18-alpine3.11
+
+RUN groupadd -r macsygrp && useradd -r -s /bin/false -g macsygrp macsygrp
+
+RUN chown -R macsygrp:macsygrp /build
+
+USER macsygrp
+
+COPY --from=stage1 /build /build
+COPY ./data /build/data
+
+ENV PATH "$PATH:/build/ncbi-blast-2.10.0+/bin"
+ENV PATH "$PATH:/build/hmmer-3.3/bin"
+ENV PATH "$PATH:/build/macsyfinder-1.0.5/bin"

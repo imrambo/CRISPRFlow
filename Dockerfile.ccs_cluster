@@ -1,0 +1,26 @@
+FROM ubuntu:18.04
+
+USER root
+
+RUN apt-get update && apt-get install -y python3.8 \
+    python3-pip \
+    git \
+    cd-hit \
+    prodigal \
+    gcc \
+    make \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean \
+    && pip3 install biopython pandas python-magic
+
+RUN groupadd -r appgroup && useradd -r -s /bin/false -g appgroup appuser
+
+WORKDIR /build
+
+RUN chown -R appuser:appgroup /build
+
+USER appuser
+
+COPY ./bin /build/bin
+
+RUN /bin/sh
