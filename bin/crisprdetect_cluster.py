@@ -51,18 +51,18 @@ default='single', help='Prodigal 2.6.3 search mode - choose single or meta. Defa
 parser.add_argument('--crispr_qual_cutoff', type=int, dest='crispr_qual_cutoff', action='store',
 default=3, help='Exclude CRISPR arrays with CRISPRDetect quality score less than this value. Default = 3')
 
-# parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
-# help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
-# parser.add_argument('--macsy_dbtype', type=str, dest='macsy_dbtype', action='store',
-# default='ordered_replicon', help='Specify dataset type for MacSyFinder. [unordered_replicon, unordered, ordered_replicon, gembase]')
-# parser.add_argument('--macsy_eval', type=float, dest='macsy_eval', action='store',
-# default=1e-4, help='E-value cutoff for MacSyFinder. Default = 1e-4')
-# parser.add_argument('--macsy_coverage', type=float, dest='macsy_coverage', action='store',
-# default=0.4, help='Minimum profile coverage for MacSyFinder. Default = 0.4')
-# parser.add_argument('--macsy_systems', type=str, dest='macsy_systems', action='store',
-# default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default = all')
-# parser.add_argument('--profile_dir', type=str, dest='profile_dir', action='store',
-# default='/build/data/profiles', help='Path to directory containing HMMs for MacSyFinder. Default = /build/data/profiles')
+parser.add_argument('--ccs_typing', type=str, dest='ccs_typing', action='store', default='sub-typing',
+help='Level of CRISPR-Cas system typing specificity. Choose from: [general, typing, sub-typing]')
+parser.add_argument('--macsy_dbtype', type=str, dest='macsy_dbtype', action='store',
+default='ordered_replicon', help='Specify dataset type for MacSyFinder. [unordered_replicon, unordered, ordered_replicon, gembase]')
+parser.add_argument('--macsy_eval', type=float, dest='macsy_eval', action='store',
+default=1e-4, help='E-value cutoff for MacSyFinder. Default = 1e-4')
+parser.add_argument('--macsy_coverage', type=float, dest='macsy_coverage', action='store',
+default=0.4, help='Minimum profile coverage for MacSyFinder. Default = 0.4')
+parser.add_argument('--macsy_systems', type=str, dest='macsy_systems', action='store',
+default='all', help='Systems to search for with MacSyFinder, e.g. CasIF. Default = all')
+parser.add_argument('--profile_dir', type=str, dest='profile_dir', action='store',
+default='/build/data/profiles', help='Path to directory containing HMMs for MacSyFinder. Default = /build/data/profiles')
 
 
 opts = parser.parse_args()
@@ -225,23 +225,23 @@ if gzip:
     print('re-gzip compressing file %s' % opts.fasta_file)
     subprocess.run(['gzip', nt_fasta], shell=False)
 #==============================================================================
-# ###---BEGIN MacSyFinder---###
-# #(Sub)type the groups of CRISPR-neighboring genes
-# macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
-# '--e-value-search':opts.macsy_eval, '--i-evalue-select':opts.macsy_eval, '--coverage-profile':opts.macsy_coverage,
-# '--def':'/build/data/definitions/%s' % opts.ccs_typing,
-# '--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
-# '--profile-suffix':'.hmm', '--profile-dir':opts.profile_dir,
-# '--worker':opts.threads}
-#
-# for csp in cluster_seq_paths:
-#     macsyfinder_opts['--sequence-db'] = csp
-#     macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, shell_tools.get_basename(csp)))
-#     macsyfinder_cmd = shell_tools.exec_cmd_generate('macsyfinder', macsyfinder_opts)
-#     #Search the CRISPR-Cas (sub)types systems of choice
-#     macsyfinder_cmd.append(opts.macsy_systems)
-#     #Run MacSyFinder
-#     subprocess.run(macsyfinder_cmd, shell=False)
-#     logger.info('%s with MacSyFinder performed for %s' % (opts.ccs_typing, csp))
-# ###---END MacSyFinder---###
+###---BEGIN MacSyFinder---###
+#(Sub)type the groups of CRISPR-neighboring genes
+macsyfinder_opts = {'--db-type':opts.macsy_dbtype,
+'--e-value-search':opts.macsy_eval, '--i-evalue-select':opts.macsy_eval, '--coverage-profile':opts.macsy_coverage,
+'--def':'/build/data/definitions/%s' % opts.ccs_typing,
+'--res-search-suffix':'hmmout', '--res-extract-suffix':'res_hmm_extract',
+'--profile-suffix':'.hmm', '--profile-dir':opts.profile_dir,
+'--worker':opts.threads}
+
+for csp in cluster_seq_paths:
+    macsyfinder_opts['--sequence-db'] = csp
+    macsyfinder_opts['--out-dir'] = os.path.join(output_paths['MacSyFinder'], '%s_%s' % (prefix, shell_tools.get_basename(csp)))
+    macsyfinder_cmd = shell_tools.exec_cmd_generate('macsyfinder', macsyfinder_opts)
+    #Search the CRISPR-Cas (sub)types systems of choice
+    macsyfinder_cmd.append(opts.macsy_systems)
+    #Run MacSyFinder
+    subprocess.run(macsyfinder_cmd, shell=False)
+    logger.info('%s with MacSyFinder performed for %s' % (opts.ccs_typing, csp))
+###---END MacSyFinder---###
 # #==============================================================================

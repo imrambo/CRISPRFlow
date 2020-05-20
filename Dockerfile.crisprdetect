@@ -1,4 +1,5 @@
-FROM ubuntu:18.04 AS build
+#FROM ubuntu:18.04 AS build
+FROM perl:5.30.2-stretch
 
 LABEL maintainer="ian.rambo@utexas.edu"
 
@@ -16,8 +17,10 @@ WORKDIR /build
 RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
 
 # Install CRISPRDetect Perl dependencies
-RUN cpan POSIX Storable File::Spec File::Temp File::Path::2.00 Test::More::0.81_01 \
-    && cpan Parallel::ForkManager
+#RUN cpan POSIX Storable File::Spec File::Temp File::Path::2.00 Test::More::0.81_01 \
+    #&& cpan Parallel::ForkManager
+
+RUN ["sh", "-c", "PERL_MM_USE_DEFAULT=1", "perl", "-MCPAN", "-e", "'install Parallel:ForkManager'"]
 
 # Install blastn and CRISPRDetect 2.4
 RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
@@ -36,14 +39,16 @@ RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-bl
 
 USER crispr
 
-FROM alpine:3.11.6
+COPY ./test /build/test
 
-RUN apk update && apk --no-cache add perl
+#FROM alpine:3.11.6
 
-RUN addgroup -S crispr && adduser -S crispr -G crispr -s /bin/sh
+#RUN apk update && apk --no-cache add perl
 
-USER crispr
+#RUN addgroup -S crispr && adduser -S crispr -G crispr -s /bin/sh
 
-COPY --from=build --chown=crispr:crispr /build /build
+#USER crispr
 
-ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
+#COPY --from=build --chown=crispr:crispr /build /build
+
+#ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
