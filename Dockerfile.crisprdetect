@@ -1,7 +1,8 @@
-#FROM ubuntu:18.04 AS build
-FROM perl:5.30.2-stretch
+FROM ubuntu:18.04 AS build
 
 LABEL maintainer="ian.rambo@utexas.edu"
+
+USER root
 
 RUN apt-get update && apt-get install -y wget \
     git \
@@ -12,15 +13,12 @@ RUN apt-get update && apt-get install -y wget \
 
 RUN mkdir -p /build
 
-WORKDIR /build
-
 RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
 
-# Install CRISPRDetect Perl dependencies
-#RUN cpan POSIX Storable File::Spec File::Temp File::Path::2.00 Test::More::0.81_01 \
-    #&& cpan Parallel::ForkManager
+RUN cpan upgrade Test::More \
+    && cpan Parallel::ForkManager
 
-RUN ["sh", "-c", "PERL_MM_USE_DEFAULT=1", "perl", "-MCPAN", "-e", "'install Parallel:ForkManager'"]
+WORKDIR /build
 
 # Install blastn and CRISPRDetect 2.4
 RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
@@ -37,7 +35,7 @@ RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-bl
     && chown -R crispr:crispr tmp \
     && rm -rf /build/ncbi-blast-2.10.0+
 
-USER crispr
+#USER crispr
 
 COPY ./test /build/test
 
