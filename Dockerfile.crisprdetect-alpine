@@ -4,22 +4,20 @@ LABEL maintainer="ian.rambo@utexas.edu"
 
 USER root
 
-RUN mkdir -p /build/data
-
 RUN apk update && apk --no-cache add wget \
     git \
     perl \
     unzip
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup -s /bin/sh
+RUN addgroup -S crispr && adduser -S crispr -G crispr -s /bin/sh
 
 WORKDIR /build
 
-RUN chown -R appuser:appgroup /build
+# Install Parallel:ForkManager dependencies
 
-USER appuser
 
-RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
+# Install BLAST+, CRISPRDetect 2.4, and move blastn to CRISPRDetect bin
+RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
     && tar -zxf ncbi-blast-2.10.0+-x64-linux.tar.gz \
     && rm ncbi-blast-2.10.0+-x64-linux.tar.gz \
     && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
@@ -28,11 +26,12 @@ RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast
     && rm CRISPRDetect_2.4.zip \
     && cd CRISPRDetect_2.4 \
     && cp /build/ncbi-blast-2.10.0+/bin/blastn . \
+    && chown -R crispr:crispr /build \
+    && chown -R crispr:crispr . \
+    && chown -R crispr:crispr tmp \
     && rm -rf /build/ncbi-blast-2.10.0+
 
+
+USER crispr
+
 ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
-
-#COPY ./bin /build/bin
-
-#&& chmod -R 755 . \
-#&& chmod 777 tmp \

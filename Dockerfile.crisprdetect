@@ -1,48 +1,49 @@
-FROM ubuntu:18.04
+FROM ubuntu:18.04 AS build
 
 LABEL maintainer="ian.rambo@utexas.edu"
 
-
-RUN apt-get update && apt-get install -y apt-utils \
-    default-jdk \
-    zlib1g-dev \
-    default-jre \
-    software-properties-common \
-    libdb-dev \
-    python3-pip \
+RUN apt-get update && apt-get install -y wget \
     git \
-    ncbi-blast+ \
-    prodigal \
-    autoconf \
-    automake \
-    libtool \
-    gcc \
-    make \
-    cmake \
-    g++ \
     unzip \
-    libstdc++6 \
-    libgomp1 \
-    libpcre3 \
-    libpcre3-dev \
+    gcc \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+RUN mkdir -p /build
 
-RUN pip3 install biopython pandas python-magic
-
-RUN mkdir -p /build/bin
 WORKDIR /build
 
-#CRISPRDetect_2.4
-RUN git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
+RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
+
+# Install CRISPRDetect Perl dependencies
+RUN cpan POSIX Storable File::Spec File::Temp File::Path::2.00 Test::More::0.81_01 \
+    && cpan Parallel::ForkManager
+
+# Install blastn and CRISPRDetect 2.4
+RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && tar -zxf ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && rm ncbi-blast-2.10.0+-x64-linux.tar.gz \
+    && git clone https://github.com/davidchyou/CRISPRDetect_2.4.git \
     && cd CRISPRDetect_2.4 \
     && unzip CRISPRDetect_2.4.zip \
     && rm CRISPRDetect_2.4.zip \
-    && cpan Parallel::ForkManager \
     && cd CRISPRDetect_2.4 \
-    && chmod -R 755 . && chmod 777 tmp
+    && cp /build/ncbi-blast-2.10.0+/bin/blastn . \
+    && chown -R crispr:crispr /build \
+    && chown -R crispr:crispr . \
+    && chown -R crispr:crispr tmp \
+    && rm -rf /build/ncbi-blast-2.10.0+
+
+USER crispr
+
+FROM alpine:3.11.6
+
+RUN apk update && apk --no-cache add perl
+
+RUN addgroup -S crispr && adduser -S crispr -G crispr -s /bin/sh
+
+USER crispr
+
+COPY --from=build --chown=crispr:crispr /build /build
 
 ENV PATH "$PATH:/build/CRISPRDetect_2.4/CRISPRDetect_2.4"
-
-COPY ./bin /build/bin
