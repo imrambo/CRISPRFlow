@@ -72,10 +72,13 @@ def joblog_test(joblog):
     return nonzero, zero
 #------------------------------------------------------------------------------
 def get_basename(file_path):
-    basename = os.path.basename(file_path)
-    #Remove two extensions, e.g. foo.tar.gz becomes foo
-    if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
-        basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
-    else:
-        basename = os.path.splitext(basename)[0]
+    try:
+        basename = os.path.basename(file_path)
+        #Remove two extensions, e.g. foo.tar.gz becomes foo
+        if re.match(r'^.*?\.[a-z]+\.[a-z]+$', basename):
+            basename = re.findall(r'^(.*?)\.[a-z]+\.[a-z]+$', basename)[0]
+        else:
+            basename = os.path.splitext(basename)[0]
+    except:
+        print('no file path specified!')
     return basename

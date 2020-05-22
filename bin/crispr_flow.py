@@ -23,7 +23,7 @@ from datetime import datetime
 #from prodigal import *
 import shell_tools
 from gff3 import gff3_to_pddf
-from gene_clusters import *
+import gene_clusters
 #==============================================================================
 parser = argparse.ArgumentParser()
 
@@ -232,7 +232,7 @@ subprocess.run(prodigal_cmd, shell = False)
 prodigal_aa_dict = dict()
 
 if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
-    prodigal_aa_dict = make_seqdict(prodigal_aa, format='fasta')
+    prodigal_aa_dict = gene_clusters.make_seqdict(prodigal_aa, format='fasta')
 
 ###---Fetch the proximal ORFs for each putative CRISPR array---###
 #Loop through the CRISPR array DataFrame and pull out Prodigal ORF entries
