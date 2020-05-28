@@ -17,7 +17,14 @@ RUN apt-get update && apt-get install -y apt-utils \
 
 RUN mkdir -p /build
 
-RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
+ARG USER_ID
+ARG GROUP_ID
+
+#RUN addgroup --gid $GROUP_ID crispr
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID crispr
+
+#RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
+
 
 WORKDIR /build
 
@@ -33,21 +40,23 @@ RUN wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-bl
 
 COPY ./bin /build/bin
 
-COPY ./test /build/test
-
-RUN chown -R crispr:crispr /build \
+#RUN chown -R crispr:crispr /build \
+RUN chown -R crispr:$GROUP_ID /build \
     && chmod -R 755 /build/CRISPRDetect_2.4/CRISPRDetect_2.4 \
     && chmod -R 777 /build/CRISPRDetect_2.4/CRISPRDetect_2.4/tmp \
     && chmod -R 755 /build/bin
 
 USER crispr
 
-
 FROM ubuntu:18.04
 
 USER root
 
-RUN apt-get update && apt-get install -y build-essential \
+ARG USER_ID
+ARG GROUP_ID
+
+RUN apt-get update && apt-get install -y apt-utils \
+    build-essential \
     gcc \
     make \
     cpanminus \
@@ -55,15 +64,20 @@ RUN apt-get update && apt-get install -y build-essential \
     python3-pip \
     cd-hit \
     prodigal \
+    less \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean \
     && pip3 install biopython pandas python-magic
 
-RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
+#RUN groupadd -r crispr && useradd -r -s /bin/sh -g crispr crispr
+
+#RUN addgroup --gid $GROUP_ID crispr
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID crispr
 
 RUN cpanm Parallel::ForkManager
 
-COPY --from=builder --chown=crispr:crispr /build /build
+#COPY --from=builder --chown=crispr:crispr /build /build
+COPY --from=builder --chown=crispr:$GROUP_ID /build /build
 
 USER crispr
 

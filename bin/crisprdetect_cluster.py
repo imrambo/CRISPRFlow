@@ -166,91 +166,97 @@ crispr_detect_gff = crispr_detect_outpatt + '.gff'
 crispr_array_df = pd.DataFrame()
 crispr_spacer_df = pd.DataFrame()
 
-try:
-    #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
-    crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
-    #Split up attributes for CRISPR arrays into new columns
-    crispr_array_df[['ID', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
-    #Select entries for spacers
-    crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
-    #Split up attributes for CRISPR spacers into new columns
-    crispr_spacer_df[['ID', 'Name', 'Parent', 'Spacer', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_spacer_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
+if os.stat(crispr_detect_gff).st_size > 0:
+    try:
+        #Convert the GFF to a pandas data frame, selecting full CRISPR arrays coords
+        crispr_array_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'repeat_region', index_col=False)
+    except FileNotFoundError:
+        logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
 
-except FileNotFoundError:
-    logger.error('CRISPRDetect GFF file %s not found' % crispr_detect_gff)
+    if not crispr_array_df.empty:
+        #Split up attributes for CRISPR arrays into new columns
+        crispr_array_df[['ID', 'Repeat', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_array_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
+        #Select entries for spacers
+        crispr_spacer_df = gff3_to_pddf(gff = crispr_detect_gff, ftype = 'binding_site', index_col=False)
+        #Split up attributes for CRISPR spacers into new columns
+        crispr_spacer_df[['ID', 'Name', 'Parent', 'Spacer', 'Dbxref', 'OntologyTerm', 'ArrayQualScore']] = crispr_spacer_df['attributes'].str.replace('[A-Za-z]+\=', '', regex=True).str.split(pat = ";", expand=True)
 
-#####=====SPACERS=====#####
-#Write the CRISPR spacers to an output nucleotide FASTA
-crispr_spacer_fna = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers.fna' % prefix)
-with open(crispr_spacer_fna, 'w') as spacer_fa:
-    logger.info('writing spacers to %s' % crispr_spacer_fna)
-    for index, row in crispr_spacer_df.iterrows():
-        spacer_fasta_record = '>%s_____%s' % (row['seqid'], row['ID']) + '\n' + row['Spacer'] + '\n'
-        spacer_fa.write(spacer_fasta_record)
+        #####=====SPACERS=====#####
+        #Write the CRISPR spacers to an output nucleotide FASTA
+        crispr_spacer_fna = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers.fna' % prefix)
+        with open(crispr_spacer_fna, 'w') as spacer_fa:
+            logger.info('writing spacers to %s' % crispr_spacer_fna)
+            for index, row in crispr_spacer_df.iterrows():
+                spacer_fasta_record = '>%s_____%s' % (row['seqid'], row['ID']) + '\n' + row['Spacer'] + '\n'
+                spacer_fa.write(spacer_fasta_record)
 
-###---Cluster unique spacers @ 100% identity with CD-HIT-EST---###
-crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers_cd-hit-est_cluster100.fna' % prefix)
-###---CD-HIT-EST---###
-cdhit_est_opts = {'-i':crispr_spacer_fna,
-                  '-o':crispr_spacers_cluster,
-                  '-c':'1.0',
-                  '-b':'20',
-                  '-d':'50',
-                  '-T':opts.threads,
-                  '-n':'11'}
-cdhit_est_spc_cmd = shell_tools.exec_cmd_generate('cd-hit-est', cdhit_est_opts)
-subprocess.run(cdhit_est_spc_cmd)
-#==============================================================================
-###---BEGIN Prodigal---###
-"""
-Predict genes in contigs containing a putative CRISPR array.
-"""
-prodigal_outfmt = 'gff'
-prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
-prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
+        ###---Cluster unique spacers @ 100% identity with CD-HIT-EST---###
+        crispr_spacers_cluster = os.path.join(output_paths['CRISPRDetect'], '%s_crispr_spacers_cd-hit-est_cluster100.fna' % prefix)
+        ###---CD-HIT-EST---###
+        cdhit_est_opts = {'-i':crispr_spacer_fna,
+                          '-o':crispr_spacers_cluster,
+                          '-c':'1.0',
+                          '-b':'20',
+                          '-d':'50',
+                          '-T':opts.threads,
+                          '-n':'11'}
+        cdhit_est_spc_cmd = shell_tools.exec_cmd_generate('cd-hit-est', cdhit_est_opts)
+        subprocess.run(cdhit_est_spc_cmd)
+        #==============================================================================
+        ###---BEGIN Prodigal---###
+        """
+        Predict genes in contigs containing a putative CRISPR array.
+        """
+        prodigal_outfmt = 'gff'
+        prodigal_out = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.%s' % prodigal_outfmt)
+        prodigal_aa = os.path.join(output_paths['Prodigal'], prefix + '_prodigal.faa')
 
-prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':opts.prodigal_mode, '-i':nt_fasta}
+        prodigal_opts = {'-o':prodigal_out, '-a':prodigal_aa, '-p':opts.prodigal_mode, '-i':nt_fasta}
 
-#Generate and run the Prodigal command
-prodigal_cmd = shell_tools.exec_cmd_generate('prodigal', prodigal_opts)
-subprocess.run(prodigal_cmd, shell = False)
+        #Generate and run the Prodigal command
+        prodigal_cmd = shell_tools.exec_cmd_generate('prodigal', prodigal_opts)
+        subprocess.run(prodigal_cmd, shell = False)
 
 
-prodigal_aa_dict = dict()
+        prodigal_aa_dict = dict()
 
-if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
-    prodigal_aa_dict = gene_clusters.make_seqdict(prodigal_aa, format='fasta')
+        if os.path.exists(prodigal_aa) and os.stat(prodigal_aa).st_size != 0:
+            prodigal_aa_dict = gene_clusters.make_seqdict(prodigal_aa, format='fasta')
 
-###---Fetch the proximal ORFs for each putative CRISPR array---###
-#Loop through the CRISPR array DataFrame and pull out Prodigal ORF entries
-#that fall within the window coordinate extent
-#cluster_seq_paths = []
+        ###---Fetch the proximal ORFs for each putative CRISPR array---###
+        #Loop through the CRISPR array DataFrame and pull out Prodigal ORF entries
+        #that fall within the window coordinate extent
+        #cluster_seq_paths = []
 
-for index, row in crispr_array_df.iterrows():
-    cluster_orfs = []
-    seqid = re.escape(row['seqid'])
-    pattern = r'%s_\d+$' % seqid
-    #Are ORFs within range of the CRISPR array? If so, gather them.
-    for orfid in prodigal_aa_dict.keys():
-        if re.match(pattern, orfid):
-            orf_coord = [int(a.strip()) for a in prodigal_aa_dict[orfid].description.split('#')[1:3]]
-            #if orf_coord[0] >= int(row['start']) - opts.clst_window_extent or orf_coord[1] <= int(row['end']) + opts.clst_window_extent:
-            if orf_coord[0] >= int(row['start']) - opts.clst_window_extent and orf_coord[1] < int(row['start']):
-                cluster_orfs.append(prodigal_aa_dict[orfid])
-            elif orf_coord[0] > int(row['end']) and orf_coord[1] <= int(row['end']) + opts.clst_window_extent:
-                cluster_orfs.append(prodigal_aa_dict[orfid])
-            else:
-                pass
-    print('CRISPR', row['ID'], row['start'], ':', \
-         row['end'], '----', len(cluster_orfs), 'proximal ORFs', \
-         'within', str(opts.clst_window_extent), 'bp')
-    #write FASTA amino acid file of translated ORFs within window extent of CRISPR
-    cluster_seqs = os.path.join(output_paths['Cluster'], '%s_%s_orfclust_%d.faa' % (row['seqid'], row['ID'], opts.clst_window_extent))
-    #cluster_seq_paths.append(cluster_seqs)
-    with open(cluster_seqs, 'w') as clustseq:
-        print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
-        SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
-
+        for index, row in crispr_array_df.iterrows():
+            cluster_orfs = []
+            seqid = re.escape(row['seqid'])
+            pattern = r'%s_\d+$' % seqid
+            #Are ORFs within range of the CRISPR array? If so, gather them.
+            for orfid in prodigal_aa_dict.keys():
+                if re.match(pattern, orfid):
+                    orf_coord = [int(a.strip()) for a in prodigal_aa_dict[orfid].description.split('#')[1:3]]
+                    #if orf_coord[0] >= int(row['start']) - opts.clst_window_extent or orf_coord[1] <= int(row['end']) + opts.clst_window_extent:
+                    if orf_coord[0] >= int(row['start']) - opts.clst_window_extent and orf_coord[1] < int(row['start']):
+                        cluster_orfs.append(prodigal_aa_dict[orfid])
+                    elif orf_coord[0] > int(row['end']) and orf_coord[1] <= int(row['end']) + opts.clst_window_extent:
+                        cluster_orfs.append(prodigal_aa_dict[orfid])
+                    else:
+                        pass
+            print('CRISPR', row['ID'], row['start'], ':', \
+                 row['end'], '----', len(cluster_orfs), 'proximal ORFs', \
+                 'within', str(opts.clst_window_extent), 'bp')
+            #write FASTA amino acid file of translated ORFs within window extent of CRISPR
+            cluster_seqs = os.path.join(output_paths['Cluster'], '%s_%s_orfclust_%d.faa' % (row['seqid'], row['ID'], opts.clst_window_extent))
+            #cluster_seq_paths.append(cluster_seqs)
+            with open(cluster_seqs, 'w') as clustseq:
+                print('writing CRISPR-proximal translated ORFs to %s' % cluster_seqs)
+                SeqIO.write(cluster_orfs, cluster_seqs, 'fasta')
+    else:
+        print('CRISPRDetect GFF file has entries', \
+              'CRISPR pandas df is empty')
+else:
+    print('No putative CRISPRs found with CRISPRDetect for', opts.fasta_file)
 ###---END Prodigal---###
 #Compress the input if it was gzipped originally
 if gzip:

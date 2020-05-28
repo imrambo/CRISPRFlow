@@ -4,7 +4,10 @@ LABEL maintainer="ian.rambo@utexas.edu"
 
 USER root
 
-RUN mkdir -p /build/data /build/dep
+ARG USER_ID
+ARG GROUP_ID
+
+RUN mkdir -p /build/dep
 
 RUN apt-get update && apt-get -y install apt-utils \
     software-properties-common \
@@ -20,7 +23,9 @@ RUN apt-get update && apt-get -y install apt-utils \
     && apt-get clean -y \
     && pip install coverage python-coveralls
 
-RUN groupadd -r macsygrp && useradd -r -s /bin/nologin -g macsygrp macsygrp
+#RUN groupadd -r macsyuser && useradd -r -s /bin/nologin -g macsyuser macsyuser
+
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID macsyuser
 
 WORKDIR /build
 
@@ -53,30 +58,29 @@ RUN wget https://bintray.com/gem-pasteur/MacSyFinder/download_file?file_path=mac
     && cd .. \
     && rm macsyfinder-1.0.5.tar.gz
 
-#RUN git clone https://github.com/gem-pasteur/macsyfinder.git \
-#    && cd macsyfinder \
-#    && python2.7 setup.py build \
-#    && python2.7 setup.py test -vv \
-#    && python2.7 setup.py install
+COPY ./data /build
+RUN chown -R macsyuser:$GROUP_ID /build
 
-RUN chown -R macsygrp:macsygrp /build
-
-USER macsygrp
-
-FROM python:2.7.18-alpine3.11
-
-USER root
-
-RUN addgroup -S macsygrp && adduser -S macsygrp -G macsygrp
-
-RUN pip install coverage python-coveralls
-
-USER macsygrp
-
-COPY --from=stage1 --chown=macsygrp:macsygrp /build /build
+USER macsyuser
 
 ENV PATH "$PATH:/build/dep:/build/macsyfinder-1.0.5/bin:/build/macsyfinder-1.0.5/macsypy:/build/macsyfinder-1.0.5/macsyview"
 
-#ENTRYPOINT ["macsyfinder"]
+#FROM python:2.7.18-alpine3.11
 
-#CMD ["-h"]
+#USER root
+
+#RUN apk update && apk add parallel
+
+#ARG USER_ID
+#ARG GROUP_ID
+
+#RUN addgroup --gid $GROUP_ID -S macsyuser
+#RUN adduser --disabled-password --no-create-home --gecos '' --uid $USER_ID macsyuser $GROUP_ID
+
+#RUN pip install coverage python-coveralls
+
+#USER macsyuser
+
+#COPY --from=stage1 --chown=macsyuser:$GROUP_ID /build /build
+
+#ENV PATH "$PATH:/build/dep:/build/macsyfinder-1.0.5/bin:/build/macsyfinder-1.0.5/macsypy:/build/macsyfinder-1.0.5/macsyview"
