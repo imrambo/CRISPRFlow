@@ -7,7 +7,7 @@
 #Contact: ian.rambo@utexas.edu, imrambo@lbl.gov
 #Thirteen... that's a mighty unlucky number... for somebody!
 
-#Dependencies: wget
+#Dependencies: wget, parallel
 
 #Download FTP tables from: https://www.ncbi.nlm.nih.gov/genome/browse/#!/overview/
 #==============================================================================
